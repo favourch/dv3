@@ -61,6 +61,11 @@ Route::post('/invite/{identifier}', [App\Http\Controllers\AuthController::class,
 
 Route::get('/logout', [App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
 
+//Webhook
+Route::match(['get', 'post'], '/webhook/whatsapp/{identifier?}', [App\Http\Controllers\WebhookController::class, 'handle']);
+Route::match(['get', 'post'], '/webhook/waba', [App\Http\Controllers\WebhookController::class, 'whatsappWebhook']);
+Route::match(['get', 'post'], '/webhook/{processor}', [App\Http\Controllers\WebhookController::class, 'processWebhook']);
+Route::match(['get', 'post'], '/payment/{processor}', [App\Http\Controllers\PaymentController::class, 'processPayment']);
 
 Route::get('/campaign-send', [App\Http\Controllers\FrontendController::class, 'sendCampaign']);
 Route::get('/migrate-upgrade', [App\Http\Controllers\FrontendController::class, 'migrate']);
@@ -68,6 +73,9 @@ Route::get('/migrate-upgrade', [App\Http\Controllers\FrontendController::class, 
 Route::middleware(['guest', 'redirectIfAuthenticated:user,admin'])->group(function () {
     Route::get('/login', [App\Http\Controllers\AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [App\Http\Controllers\AuthController::class, 'login'])->name('login');
+    Route::get('/social-login/{type?}', [App\Http\Controllers\AuthController::class, 'socialLogin']);
+    Route::get('/google/callback', [App\Http\Controllers\AuthController::class, 'googleCallback'])->name('google.callback');
+    Route::get('/facebook/callback', [App\Http\Controllers\AuthController::class, 'handleFacebookCallback']);
     Route::get('/signup', [App\Http\Controllers\AuthController::class, 'showRegistrationForm']);
     Route::post('/signup', [App\Http\Controllers\AuthController::class, 'handleRegistration']);
     Route::get('/forgot-password', [App\Http\Controllers\AuthController::class, 'showForgotForm']);
@@ -100,7 +108,9 @@ Route::middleware(['auth:user'])->group(function () {
 
             Route::group(['middleware' => 'check.client.role'], function () {
                 Route::delete('dismiss-notification/{type}', [App\Http\Controllers\User\DashboardController::class, 'dismissNotification'])->name('dashboard.team.notification.dismiss');
-               
+                Route::match(['get', 'post'], '/billing', [App\Http\Controllers\User\BillingController::class, 'index'])->name('user.billing.index');
+                Route::post('/pay', [App\Http\Controllers\User\BillingController::class, 'pay'])->name('user.billing.pay');
+                Route::resource('subscription', App\Http\Controllers\User\SubscriptionController::class);
             });
 
             Route::group(['middleware' => 'check.subscription'], function () {
@@ -192,6 +202,25 @@ Route::middleware(['auth:user'])->group(function () {
 Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index']);
     Route::resource('users', App\Http\Controllers\Admin\UserController::class);
+    Route::resource('organizations', App\Http\Controllers\Admin\OrganizationController::class);
+    Route::resource('blog/posts', App\Http\Controllers\Admin\BlogController::class);
+    Route::resource('blog/categories', App\Http\Controllers\Admin\BlogCategoryController::class);
+    Route::resource('blog/authors', App\Http\Controllers\Admin\BlogAuthorController::class);
+    Route::resource('blog/tags', App\Http\Controllers\Admin\BlogTagController::class);
+    Route::resource('tax-rates', App\Http\Controllers\Admin\TaxController::class);
+    Route::resource('coupons', App\Http\Controllers\Admin\CouponController::class);
+    Route::resource('faqs', App\Http\Controllers\Admin\FaqController::class);
+    Route::resource('testimonials', App\Http\Controllers\Admin\TestimonialController::class);
+    Route::resource('plans', App\Http\Controllers\Admin\SubscriptionPlanController::class);
+    Route::resource('team/users', App\Http\Controllers\Admin\TeamController::class);
+    Route::resource('team/roles', App\Http\Controllers\Admin\RoleController::class);
+    Route::resource('billing', App\Http\Controllers\Admin\BillingController::class);
+    Route::resource('addons', App\Http\Controllers\Admin\AddonController::class);
+    Route::post('addons/install', [App\Http\Controllers\Admin\AddonController::class, 'install']);
+    Route::post('/addons/setup/google-recaptcha', [App\Http\Controllers\Admin\AddonController::class, 'store']);
+    Route::post('/addons/setup/google-analytics', [App\Http\Controllers\Admin\AddonController::class, 'store']);
+    Route::post('/addons/setup/google-maps', [App\Http\Controllers\Admin\AddonController::class, 'store']);
+    Route::resource('payment-gateways', App\Http\Controllers\Admin\PaymentGatewayController::class)->only(['index', 'show', 'update']);
     Route::get('/languages/{language}/export', [App\Http\Controllers\Admin\LanguageController::class, 'export']);
     Route::post('/languages/{language}/import', [App\Http\Controllers\Admin\LanguageController::class, 'import']);
     Route::get('/languages/{language}/translations', [App\Http\Controllers\Admin\LanguageController::class, 'translations']);
@@ -201,7 +230,31 @@ Route::prefix('admin')->middleware(['auth:admin'])->group(function () {
 
     Route::get('/pages', [App\Http\Controllers\Admin\PageController::class, 'index']);
 
-    
+    Route::get('/users/{uuid}/organizations', [App\Http\Controllers\Admin\CustomerController::class, 'userOrganizations']);
+    Route::get('/subscriptions', [App\Http\Controllers\Admin\SubscriptionController::class, 'index']);
+    Route::get('/payment-logs', [App\Http\Controllers\Admin\PaymentController::class, 'index']);
+
+    Route::get('/support/{uuid?}', [App\Http\Controllers\Admin\TicketController::class, 'index'])->name('tickets');
+    Route::post('/support', [App\Http\Controllers\Admin\TicketController::class, 'store']);
+    Route::post('/support/{uuid}/comment', [App\Http\Controllers\Admin\TicketController::class, 'comment']);
+    Route::post('/support/{uuid}/status', [App\Http\Controllers\Admin\TicketController::class, 'changeStatus']);
+    Route::post('/support/{uuid}/priority', [App\Http\Controllers\Admin\TicketController::class, 'changePriority']);
+    Route::post('/support/{uuid}/assign', [App\Http\Controllers\Admin\TicketController::class, 'assign']);
+
+    Route::get('/settings', [App\Http\Controllers\Admin\SettingController::class, 'index']);
+    Route::match(['get', 'post'], '/settings/general', [App\Http\Controllers\Admin\SettingController::class, 'general']);
+    Route::put('/settings', [App\Http\Controllers\Admin\SettingController::class, 'update']);
+    Route::get('/settings/smtp', [App\Http\Controllers\Admin\SettingController::class, 'email']);
+    Route::get('/settings/broadcast-drivers', [App\Http\Controllers\Admin\SettingController::class, 'broadcast_driver']);
+    Route::match(['get', 'post'], '/settings/timezone', [App\Http\Controllers\Admin\SettingController::class, 'timezone']);
+    Route::get('/settings/email-templates', [App\Http\Controllers\Admin\EmailTemplateController::class, 'index']);
+    Route::get('/settings/email-template/{id}', [App\Http\Controllers\Admin\EmailTemplateController::class, 'show']);
+    Route::put('/settings/email-template/{id}', [App\Http\Controllers\Admin\EmailTemplateController::class, 'update']);
+    Route::get('/settings/pages', [App\Http\Controllers\Admin\PagesController::class, 'index']);
+    Route::post('/settings/pages', [App\Http\Controllers\Admin\PagesController::class, 'store']);
+    Route::get('/settings/page/{id}', [App\Http\Controllers\Admin\PagesController::class, 'show']);
+    Route::put('/settings/page/{id}', [App\Http\Controllers\Admin\PagesController::class, 'update']);
+    Route::delete('/settings/page/{id}', [App\Http\Controllers\Admin\PagesController::class, 'delete']);
     Route::match(['get', 'post'], '/settings/billing', [App\Http\Controllers\Admin\SettingController::class, 'billing']);
     Route::get('/settings/storage', [App\Http\Controllers\Admin\SettingController::class, 'storage']);
     Route::get('/settings/socials', [App\Http\Controllers\Admin\SettingController::class, 'socials']);

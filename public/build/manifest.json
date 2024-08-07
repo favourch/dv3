@@ -1,13 +1,13 @@
 {
-  "_prism-a564d6c1.js": {
-    "file": "assets/prism-a564d6c1.js",
+  "_prism-c97cd79f.js": {
+    "file": "assets/prism-c97cd79f.js",
     "imports": [
       "resources/js/app.js"
     ],
     "isDynamicEntry": true
   },
   "node_modules/highlight.js/es/index.js": {
-    "file": "assets/index-1013b546.js",
+    "file": "assets/index-cf69e067.js",
     "imports": [
       "resources/js/app.js"
     ],
@@ -15,7 +15,7 @@
     "src": "node_modules/highlight.js/es/index.js"
   },
   "resources/css/app.css": {
-    "file": "assets/app-b2c8324a.css",
+    "file": "assets/app-8008d215.css",
     "isEntry": true,
     "src": "resources/css/app.css"
   },
@@ -56,18 +56,18 @@
     "src": "resources/fonts/Outfit/Outfit-Thin.ttf"
   },
   "resources/js/app.css": {
-    "file": "assets/app-737d0416.css",
+    "file": "assets/app-65dc5e2a.css",
     "src": "resources/js/app.css"
   },
   "resources/js/app.js": {
     "css": [
-      "assets/app-737d0416.css"
+      "assets/app-65dc5e2a.css"
     ],
     "dynamicImports": [
       "node_modules/highlight.js/es/index.js",
-      "_prism-a564d6c1.js"
+      "_prism-c97cd79f.js"
     ],
-    "file": "assets/app-8486bb4a.js",
+    "file": "assets/app-107814ff.js",
     "isEntry": true,
     "src": "resources/js/app.js"
   }
