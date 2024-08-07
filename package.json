@@ -22,6 +22,7 @@
         "@inertiajs/vue3": "^1.0.11",
         "@intlify/unplugin-vue-i18n": "^4.0.0",
         "@vitejs/plugin-vue": "^4.3.4",
+        "@vuepic/vue-datepicker": "^9.0.1",
         "@vueup/vue-quill": "^1.2.0",
         "@wdns/vue-code-block": "^2.3.2",
         "apexcharts": "^3.43.0",
