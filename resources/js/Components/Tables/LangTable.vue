@@ -13,7 +13,12 @@
     import DropdownItemGroup from '@/Components/DropdownItemGroup.vue';
     import DropdownItem from '@/Components/DropdownItem.vue';
 
-    const props = defineProps(['rows', 'defaultLanguage']);
+    const props = defineProps({
+        rows: {
+            type: Array,
+            required: true,
+        },
+    });
 
     const { isOpenAlert, openAlert, confirmAlert } = useAlertModal();
 
@@ -56,9 +61,6 @@
                 <TableBodyRowItem :position="'first'">{{ item.name }}</TableBodyRowItem>
                 <TableBodyRowItem>{{ item.code }}</TableBodyRowItem>
                 <TableBodyRowItem>{{ $t(capitalizeFirstLetter(item.status)) }}</TableBodyRowItem>
-                <TableBodyRowItem>
-                    <span v-if="props.defaultLanguage == item.code" class="bg-slate-50 p-1 rounded-md text-[12px]">Default Language</span>
-                </TableBodyRowItem>
                 <TableBodyRowItem :position="'last'">
                     <Dropdown :align="'right'" class="mt-2">
                     <button class="inline-flex w-full justify-center rounded-md text-sm font-medium text-black hover:bg-opacity-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75">
@@ -68,7 +70,6 @@
                     </button>
                     <template #items>
                         <DropdownItemGroup>
-                            <DropdownItem v-if="props.defaultLanguage != item.code" :href="'/admin/languages/' + item.code + '/default'">{{ $t('Set as default') }}</DropdownItem>
                             <DropdownItem :href="'/admin/languages/' + item.code + '/translations'">{{ $t('Translate') }}</DropdownItem>
                             <DropdownItem as="button" @click="edit(item.id)">{{ $t('Edit') }}</DropdownItem>
                             <DropdownItem as="button" @click="openAlert(item.id)" v-if="item.code != 'en'">{{ $t('Delete') }}</DropdownItem>

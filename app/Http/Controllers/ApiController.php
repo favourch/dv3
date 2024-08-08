@@ -7,15 +7,12 @@ use App\Http\Resources\ContactResource;
 use App\Models\AutoReply;
 use App\Models\Contact;
 use App\Models\ContactGroup;
-use App\Models\Organization;
 use App\Rules\CannedReplyLimit;
 use App\Rules\ContactLimit;
 use App\Rules\UniquePhone;
 use App\Services\ChatService;
 use App\Services\ContactService;
 use App\Services\SubscriptionService;
-use App\Services\WhatsappService;
-use App\Traits\TemplateTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -24,10 +21,6 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class ApiController extends Controller
 {
-    use TemplateTrait;
-
-    private $whatsappService;
-
     /**
      * List all contacts.
      *
@@ -422,118 +415,13 @@ class ApiController extends Controller
         }
 
         // Extract the UUID of the contact
-        $this->initializeWhatsappService($request->organization);
-        $type = !isset($request->buttons) ? 'text' : 'interactive';
-
-        $message = $this->whatsappService->sendMessage($contact->uuid, $request->message, $type, $request->buttons, $request->header, $request->footer);
-        
-        return response()->json([
-            'statusCode' => 200,
-            'data' => $message
-        ], 200);
-    }
-
-    public function sendTemplateMessage(Request $request){
-        $rules = [
-            'phone' => ['required', 'string', 'max:255', 'phone:AUTO'],
-            'template.name' => 'required',
-            'template.language' => 'required',
-        ];
-
-        $validator = Validator::make($request->all(), $rules);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'statusCode' => 400,
-                'message' => __('The provided data is invalid.'),
-                'errors' => $validator->errors()
-            ], 400);
-        }
-
-        // Check if the contact exists, if not, create a new one
-        $phone = $request->phone;
-
-        if (substr($phone, 0, 1) !== '+') {
-            $phone = '+' . $phone;
-        }
-
-        $phone = new PhoneNumber($phone);
-        $phone = $phone->formatE164();
-
-        $contact = Contact::where('phone', $phone)->whereNull('deleted_at')->first();
-
-        if(!$contact){
-            $contact = new Contact();
-            $contact->organization_id = $request->organization;
-            $contact->first_name = $request->first_name;
-            $contact->last_name = $request->last_name;
-            $contact->email = $request->email;
-            $contact->phone = $phone;
-            $contact->created_by = 0;
-            $contact->save();
-        }
-
-        // Extract the UUID of the contact
-        $this->initializeWhatsappService($request->organization);
-        $responseObject = $this->whatsappService->sendTemplateMessage($contact->uuid, $request->template);
+        $uuid = $contact->uuid;
+        $request->merge(['uuid' => $uuid, 'type' => 'text']);
+        $chatService = new ChatService($request->organization);
 
         return response()->json([
             'statusCode' => 200,
-            'data' => $responseObject
-        ], 200);
-    }
-
-    public function sendMediaMessage(Request $request){
-        $rules = [
-            'phone' => ['required', 'string', 'max:255', 'phone:AUTO'],
-            'media_type' => 'required',
-            'media_url' => 'required',
-            'caption' => 'required',
-            'file_name' => 'required',
-        ];
-
-        $validator = Validator::make($request->all(), $rules);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'statusCode' => 400,
-                'message' => __('The provided data is invalid.'),
-                'errors' => $validator->errors()
-            ], 400);
-        }
-
-        // Check if the contact exists, if not, create a new one
-        $phone = $request->phone;
-
-        if (substr($phone, 0, 1) !== '+') {
-            $phone = '+' . $phone;
-        }
-
-        $phone = new PhoneNumber($phone);
-        $phone = $phone->formatE164();
-
-        $contact = Contact::where('phone', $phone)->first();
-
-        if(!$contact){
-            $contact = new Contact();
-            $contact->organization_id = $request->organization;
-            $contact->first_name = $request->first_name;
-            $contact->last_name = $request->last_name;
-            $contact->email = $request->email;
-            $contact->phone = $phone;
-            $contact->created_by = 0;
-            $contact->save();
-        }
-
-        // Extract the UUID of the contact
-        $this->initializeWhatsappService($request->organization);
-        $type = !isset($request->buttons) ? 'text' : 'interactive';
-
-        $message = $this->whatsappService->sendMedia($contact->uuid, $request->media_type, $request->file_name, $request->media_url, $request->media_url, 'amazon');
-        
-        return response()->json([
-            'statusCode' => 200,
-            'data' => $message
+            'data' => $chatService->sendMessage($request)
         ], 200);
     }
 
@@ -545,19 +433,5 @@ class ApiController extends Controller
      */
     public function storeCampaign(Request $request){
         
-    }
-
-    private function initializeWhatsappService($organizationId)
-    {
-        $config = Organization::where('id', $organizationId)->first()->metadata;
-        $config = $config ? json_decode($config, true) : [];
-
-        $accessToken = $config['whatsapp']['access_token'] ?? null;
-        $apiVersion = 'v18.0';
-        $appId = $config['whatsapp']['app_id'] ?? null;
-        $phoneNumberId = $config['whatsapp']['phone_number_id'] ?? null;
-        $wabaId = $config['whatsapp']['waba_id'] ?? null;
-
-        $this->whatsappService = new WhatsappService($accessToken, $apiVersion, $appId, $phoneNumberId, $wabaId, $organizationId);
     }
 }

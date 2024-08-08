@@ -17,7 +17,7 @@ class Addon extends Model {
         return $this->where(function ($query) use ($searchTerm) {
                         $query->where('name', 'like', '%' . $searchTerm . '%');
                     })
-                    ->oldest()
+                    ->latest()
                     ->paginate(10);
     }
 }

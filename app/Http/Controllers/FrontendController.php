@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller as BaseController;
 use App\Http\Resources\FaqResource;
-use App\Http\Resources\PageResource;
 use App\Models\Faq;
-use App\Models\Page;
 use App\Models\Review;
 use App\Models\Setting;
 use App\Models\SubscriptionPlan;
@@ -33,14 +31,13 @@ class FrontendController extends BaseController
         if($frontend_active){
             $data['plans'] = SubscriptionPlan::where('status', 'active')->whereNull('deleted_at')->get();
             $data['faqs'] = FaqResource::collection(
-                Faq::where('status', '1')->get()
+                Faq::where('status', 1)->get()
             );
             $data['reviews'] = Review::where('status', 1)->get();
             $data['currency'] = Setting::where('key', 'currency')->first()->value;
 
             $keys = ['logo', 'company_name', 'address', 'email', 'phone', 'socials', 'trial_period'];
             $data['companyConfig'] = Setting::whereIn('key', $keys)->pluck('value', 'key')->toArray();
-            $data['pages'] = Page::get();
 
             return Inertia::render('Frontend/Index', $data);
         } else {
@@ -49,18 +46,6 @@ class FrontendController extends BaseController
 
             return Inertia::render('Auth/Login', $data);
         }
-    }
-
-    public function pages(Request $request, $slug){
-        $name = str_replace('-', ' ', $slug);
-        $page = Page::where('name', $name)->first();
-
-        $data['page'] = new PageResource($page);
-        $data['pages'] = Page::get();
-        $keys = ['logo', 'company_name', 'address', 'email', 'phone', 'socials', 'trial_period'];
-        $data['companyConfig'] = Setting::whereIn('key', $keys)->pluck('value', 'key')->toArray();
-
-        return Inertia::render('Frontend/Dynamic', $data);
     }
 
     public function sendCampaign(){

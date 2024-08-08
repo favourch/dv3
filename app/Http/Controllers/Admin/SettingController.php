@@ -38,16 +38,6 @@ class SettingController extends BaseController
 
     public function update(StoreConfig $request)
     {
-        if (env('APP_ENV') === 'demo') {
-            // Return a response indicating that the function is not allowed in demo environment
-            return Redirect::back()->with(
-                'status', [
-                    'type' => 'error', 
-                    'message' => __('Updating settings is not allowed in demo.')
-                ]
-            );
-        }
-
         $settings = $this->settingService->updateSettings($request);
 
         return Redirect::back()->with(

@@ -240,7 +240,7 @@ class InstallerController extends BaseController
     {
         $data = json_encode([
             'date' => date('Y/m/d h:i:s'),
-            'version' => '1.9'
+            'version' => '1.5'
         ], JSON_THROW_ON_ERROR);
         file_put_contents(storage_path('installed'), $data, FILE_APPEND | LOCK_EX);
         Artisan::call('route:clear');
@@ -261,8 +261,8 @@ class InstallerController extends BaseController
         return Inertia::render('Installer/Update', $data);
     }
 
-    public function runUpdate(Request $request){
-        $version = '1.9';
+    public function runUpdate(){
+        $version = '1.5';
 
         //Run migrations
         $migrateOutput = Artisan::call('migrate', [
@@ -274,7 +274,7 @@ class InstallerController extends BaseController
 
         if($migrateSuccess){
             //Run DB changes
-            $dbUpdate = (new UpdateService)->migrate($request, $version);
+            $dbUpdate = (new UpdateService)->migrate($version);
 
             if($dbUpdate){
                 $data = json_encode([
@@ -312,8 +312,7 @@ class InstallerController extends BaseController
             'openssl' => extension_loaded('openssl'),
             'tokenizer' => extension_loaded('tokenizer'),
             'json' => extension_loaded('json'),
-            'curl' => extension_loaded('curl'),
-            'ziparchive' => class_exists('ZipArchive')
+            'curl' => extension_loaded('curl')
         ];
 
         $data['status'] = !in_array(false, $data['requirements'], true);
@@ -333,10 +332,6 @@ class InstallerController extends BaseController
         $data['status'] = !in_array(false, $data['permissions'], true);
 
         return $data;
-    }
-
-    function isZipArchiveAvailable() {
-        return class_exists('ZipArchive');
     }
 
     public function isInstalled(): bool

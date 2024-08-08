@@ -92,11 +92,6 @@
                 <p class="normal-case whitespace-pre-wrap">{{ JSON.parse(content.metadata).button.text }}</p>
             </div>
 
-            <!--Interactive button formatting-->
-            <div v-if="JSON.parse(content.metadata).type === 'interactive'" class="max-w-[300px]">
-                <p class="normal-case whitespace-pre-wrap">{{ JSON.parse(content.metadata).interactive.button_reply.title }}</p>
-            </div>
-
             <!--Image formatting-->
             <div v-else-if="JSON.parse(content.metadata).type === 'image'">
                 <img v-if="content.media != null" :src="content?.media?.location == 'local' ? '/media/' + content?.media?.path : content?.media?.path" alt="Image" class="mb-2 max-w-[300px]" />

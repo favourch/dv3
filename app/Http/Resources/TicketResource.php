@@ -16,6 +16,8 @@ class TicketResource extends JsonResource
     public function toArray(Request $request): array
     {
         $data = parent::toArray($request);
+        $data['updated_at'] = DateTimeHelper::formatDate($this->updated_at);
+        $data['created_at'] = DateTimeHelper::formatDate($this->created_at);
 
         return $data;
     }

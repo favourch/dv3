@@ -84,6 +84,7 @@
                 </div>
             </div>
         </div>
+
         <Modal :label="label" :isOpen=isOpenModal>
             <form @submit.prevent="submitForm()" class="gap-y-4">
                 <h2 class="text-2xl mb-4">{{ $t('Add payment') }}</h2>
@@ -147,7 +148,6 @@
         'organizationId'
     ]);
 
-    const subscription = ref(props.subscription.data)
     const isOpenModal = ref(false);
     const isLoading = ref(false);
     
@@ -180,19 +180,17 @@
 
     onMounted(() => {
         //Pusher.logToConsole = true;
-        if(props.pusherSettings['pusher_app_key'] != null && props.pusherSettings['pusher_app_cluster'] != null){
-            window.Pusher = Pusher;
+        window.Pusher = Pusher;
 
-            window.Echo = new Echo({
-                broadcaster: 'pusher',
-                key: props.pusherSettings['pusher_app_key'],
-                cluster: props.pusherSettings['pusher_app_cluster'],
-                encrypted: true,
-            });
+        window.Echo = new Echo({
+            broadcaster: 'pusher',
+            key: props.pusherSettings['pusher_app_key'],
+            cluster: props.pusherSettings['pusher_app_cluster'],
+            encrypted: true,
+        });
 
-            window.Echo.channel('payments.ch' + props.organizationId).listen('NewPaymentEvent', (event) => {
-                router.visit('/billing', {});
-            });
-        }
+        window.Echo.channel('payments.ch' + props.organizationId).listen('NewPaymentEvent', (event) => {
+            router.visit('/billing', {});
+        });
     });
 </script>

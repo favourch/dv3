@@ -69,20 +69,14 @@ class ContactController extends BaseController
     {
         $import = new ContactsImport();
         Excel::import($import, $request->file);
-
-        $successfulImports = $import->getsuccessfulImports();
-
-        return redirect('/contacts')->with(
-            'status', [
-                'type' => $successfulImports > 0 ? 'success' : 'error', 
-                'message' => $successfulImports > 0 ? __('Excel import successful!') : __('Excel import failed!'),
-                'successfulImports' => $import->getsuccessfulImports(),
-                'failedNames' => $import->getFailedImportsDueToFirstName(),
-                'failedDuplicates' => $import->getFailedImportsDueToDuplicatesCount(),
-                'failedFormats' => $import->getFailedImportsDueToFormat(),
-                'totalImports' => $import->getTotalImportsCount(),
-            ]
-        );
+        
+        return response()->json([
+            'success' => true, 
+            'message'=> __('Excel import successful!'),
+            'failedDuplicates' => $import->getFailedImportsDueToDuplicatesCount(),
+            'failedFormats' => $import->getFailedImportsDueToFormat(),
+            'totalImports' => $import->getTotalImportsCount(),
+        ]);
     }
 
     public function store(StoreContact $request){
@@ -120,29 +114,16 @@ class ContactController extends BaseController
         );
     }
 
-    public function delete(Request $request)
+    public function delete($uuid)
     {
-        $uuids = $request->input('uuids', []);
+        $this->contactService()->delete($uuid);
 
-        if (empty($uuids)) {
-            // Delete all contacts (soft delete)
-            Contact::whereNotNull('id')->delete();
-            return redirect('/contacts')->with(
-                'status', [
-                    'type' => 'success', 
-                    'message' => __('Contact(s) deleted successfully')
-                ]
-            );
-        } else {
-            // Delete contacts by UUIDs (soft delete)
-            Contact::whereIn('uuid', $uuids)->delete();
-            return redirect('/contacts')->with(
-                'status', [
-                    'type' => 'success', 
-                    'message' => __('Contact(s) deleted successfully')
-                ]
-            );
-        }
+        return redirect('/contacts/' . $uuid)->with(
+            'status', [
+                'type' => 'success', 
+                'message' => __('Contact deleted successfully')
+            ]
+        );
     }
 
     private function getLocationSettings(){

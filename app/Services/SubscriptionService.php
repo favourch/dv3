@@ -57,9 +57,7 @@ class SubscriptionService
             $paymentPlatform = (new PaymentPlatformResolver())->resolveService($request->method);
             session()->put('paymentPlatform', $request->method);
 
-            $amountDue = str_replace(',', '', $billingDetails['amountDue']);
-            $amountDue = (float)$amountDue;
-            $response = $paymentPlatform->handlePayment($amountDue, $request->plan);
+            $response = $paymentPlatform->handlePayment($billingDetails['amountDue'], $request->plan);
 
             return $response;
         }
@@ -114,18 +112,13 @@ class SubscriptionService
     public static function createBillingInvoice($billingDetails, $organizationId, $planId, $userId)
     {
         return DB::transaction(function () use ($billingDetails, $organizationId, $planId, $userId) {
-            $netAmount = str_replace(',', '', $billingDetails['netAmount']);
-            $netAmount = (float)$netAmount;
-            $totalTaxAmount = str_replace(',', '', $billingDetails['totalTaxAmount']);
-            $totalTaxAmount = (float)$totalTaxAmount;
-
             $invoice = BillingInvoice::create([
                 'organization_id' => $organizationId,
                 'plan_id' => $planId,
-                'subtotal' => $netAmount,
-                'tax' => $totalTaxAmount,
+                'subtotal' => $billingDetails['netAmount'],
+                'tax' => $billingDetails['totalTaxAmount'],
                 'tax_type' => $billingDetails['isTaxInclusive'] === true ? 'inclusive' : 'exclusive',
-                'total' => $netAmount,
+                'total' => $billingDetails['netAmount'],
             ]);
 
             foreach($billingDetails['taxRates'] as $taxRate){
@@ -141,7 +134,7 @@ class SubscriptionService
                 'entity_type' => 'invoice',
                 'entity_id' => $invoice->id,
                 'description' => 'Invoice',
-                'amount' => -$netAmount,
+                'amount' => -$billingDetails['netAmount'],
                 'created_by' => $userId,
             ]);
 

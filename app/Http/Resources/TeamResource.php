@@ -16,10 +16,7 @@ class TeamResource extends JsonResource
     public function toArray(Request $request): array
     {
         $data = parent::toArray($request);
-
-        // Convert updated_at to the organization's timezone and format it
-        $updatedAt = DateTimeHelper::convertToOrganizationTimezone($this->updated_at);
-        $data['updated_at'] = DateTimeHelper::formatDate($updatedAt);
+        $data['updated_at'] = DateTimeHelper::formatDate($this->updated_at);
 
         return $data;
     }

@@ -69,7 +69,7 @@ class CheckAppStatus
     {
         $file = json_decode(file_get_contents(storage_path('installed')));
 
-        if(!isset($file->version) || $file->version != '1.9'){
+        if(!isset($file->version) || $file->version != '1.5'){
             return false;
         } else {
             return true;

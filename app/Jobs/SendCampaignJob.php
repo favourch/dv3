@@ -28,40 +28,15 @@ class SendCampaignJob implements ShouldQueue
 
     public function handle()
     {
-        /*$timezoneQuery = Setting::where('key', 'timezone')->first();
-        $timezone = $timezoneQuery ? $timezoneQuery->value : 'UTC';*/
+        $timezoneQuery = Setting::where('key', 'timezone')->first();
+        $timezone = $timezoneQuery ? $timezoneQuery->value : 'UTC';
 
         $campaigns = Campaign::whereIn('status', ['scheduled', 'ongoing'])
-            ->with('organization') // Eager load the organization relationship
-            ->cursor();
-
-        $campaigns->each(function ($campaign) {
-            $organization = $campaign->organization;
-            $timezone = 'UTC';
-
-            if ($organization) {
-                $metadata = $organization->metadata;
-                $metadata = isset($metadata) ? json_decode($metadata, true) : null;
-
-                if ($metadata && isset($metadata['timezone'])) {
-                    $timezone = $metadata['timezone'];
-                }
-            }
-    
-            $scheduledAt = Carbon::parse($campaign->scheduled_at, $timezone);
-
-            // Compare the scheduled_at time with the current time in the organization's timezone
-            if ($scheduledAt->lte(Carbon::now($timezone))) {
-                $this->processCampaign($campaign);
-            }
-        });
-
-        /*$campaigns = Campaign::whereIn('status', ['scheduled', 'ongoing'])
             ->where('scheduled_at', '<=', Carbon::now()->setTimezone($timezone))
             ->cursor()
             ->each(function ($campaign) {
                 $this->processCampaign($campaign);
-            });*/
+            });
     }
 
     protected function processCampaign(Campaign $campaign)
@@ -169,6 +144,7 @@ class SendCampaignJob implements ShouldQueue
 
         $template = $this->buildTemplateRequest($campaignLog->campaign_id, $campaignLog->contact);
         $responseObject = $this->whatsappService->sendTemplateMessage($campaignLog->contact->uuid, $template, $campaignLog->campaign_id);
+
         $this->updateCampaignLogStatus($campaignLog, $responseObject);
     }
 

@@ -130,20 +130,18 @@
 
     onMounted(() => {
         //Pusher.logToConsole = true;
-        if(props.pusherSettings['pusher_app_key'] != null && props.pusherSettings['pusher_app_cluster'] != null){
-            window.Pusher = Pusher;
+        window.Pusher = Pusher;
 
-            window.Echo = new Echo({
-                broadcaster: 'pusher',
-                key: props.pusherSettings['pusher_app_key'],
-                cluster: props.pusherSettings['pusher_app_cluster'],
-                encrypted: true,
-            });
+        window.Echo = new Echo({
+            broadcaster: 'pusher',
+            key: props.pusherSettings['pusher_app_key'],
+            cluster: props.pusherSettings['pusher_app_cluster'],
+            encrypted: true,
+        });
 
-            window.Echo.channel('chats.ch' + props.organizationId).listen('NewChatEvent', (event) => {
-                updateSidePanel(event.chat);
-            });
-        }
+        window.Echo.channel('chats.ch' + props.organizationId).listen('NewChatEvent', (event) => {
+            updateSidePanel(event.chat);
+        });
 
         scrollToBottom();
     });

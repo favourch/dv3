@@ -46,12 +46,12 @@ class SettingController extends BaseController
     }
 
     public function viewWhatsappSettings(Request $request){
-        $settings = Setting::whereIn('key', ['is_embedded_signup_active', 'whatsapp_client_id', 'whatsapp_config_id'])
+        $settings = Setting::whereIn('key', ['is_embedded_signup_active', 'whatsapp_app_id', 'whatsapp_config_id'])
             ->pluck('value', 'key');
 
         $data = [
             'embeddedSignupActive' => $settings->get('is_embedded_signup_active', 0),
-            'appId' => $settings->get('whatsapp_client_id', null),
+            'appId' => $settings->get('whatsapp_app_id', null),
             'configId' => $settings->get('whatsapp_config_id', null),
             'settings' => Organization::where('id', session()->get('current_organization'))->first(),
             'title' => __('Settings'),

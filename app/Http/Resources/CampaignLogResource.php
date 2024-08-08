@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Helpers\DateTimeHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,8 +14,6 @@ class CampaignLogResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $data = parent::toArray($request);
-
-        return $data;
+        return parent::toArray($request);
     }
 }

@@ -9,8 +9,6 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
-use Exception;
 
 class NewChatEvent implements ShouldBroadcast
 {
@@ -38,21 +36,8 @@ class NewChatEvent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        try {
-            // Check if Pusher settings are available
-            if (config('broadcasting.connections.pusher.key') && config('broadcasting.connections.pusher.secret')) {
-                $channel = 'chats.' . 'ch' . $this->organizationId;
-                return new Channel($channel);
-            } else {
-                // Log an error if Pusher settings are not configured
-                Log::error('Pusher settings are not configured.');
-                return;
-            }
-        } catch (Exception $e) {
-            // Log the exception and prevent the event from broadcasting
-            Log::error('Failed to broadcast event: ' . $e->getMessage());
-            return;
-        }
+        $channel = 'chats.' . 'ch' . $this->organizationId;
+        return new Channel($channel);
     }
 
     /**

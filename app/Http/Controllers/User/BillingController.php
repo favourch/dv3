@@ -4,26 +4,25 @@ namespace App\Http\Controllers\User;
 
 use DB;
 use App\Http\Controllers\Controller as BaseController;
+use App\Helpers\SubscriptionHelper;
 use App\Http\Requests\PaymentRequest;
-use App\Models\Addon;
 use App\Models\BillingPayment;
 use App\Models\Organization;
 use App\Models\PaymentGateway;
 use App\Models\Setting;
 use App\Models\Subscription;
+use App\Models\SubscriptionPlan;
+use App\Models\TaxRate;
 use App\Resolvers\PaymentPlatformResolver;
 use App\Services\BillingService;
 use App\Services\SubscriptionService;
+use App\Services\SubscriptionPlanService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Redirect;
 
 class BillingController extends BaseController
 {
-    protected $billingService;
-    protected $subscriptionService;
-    protected $paymentPlatformResolver;
-
     public function __construct()
     {
         $this->billingService = new BillingService();
@@ -38,7 +37,7 @@ class BillingController extends BaseController
         $data['subscriptionIsActive'] = SubscriptionService::isSubscriptionActive($organizationId);
         $data['rows'] = $this->billingService->get($request, $organization->uuid);
         $data['filters'] = $request->all();
-        $data['methods'] = $this->paymentMethods();
+        $data['methods'] = PaymentGateway::where('is_active', 1)->get();
         $data['subscriptionDetails'] = SubscriptionService::calculateSubscriptionBillingDetails($organizationId, $data['subscription']->plan_id);
         $data['title'] = __('Billing');
         $data['isPaymentLoading'] = false;
@@ -84,34 +83,5 @@ class BillingController extends BaseController
                 ]
             );
         }
-    }
-
-    private function paymentMethods(){
-        $mergedData = [];
-
-        // Retrieve active payment methods and add to mergedData
-        $paymentMethods = PaymentGateway::where('is_active', 1)->get();
-        $mergedData = $paymentMethods->map(function ($method) {
-            return ['name' => $method->name];
-        })->toArray();
-
-        // Retrieve active addons and check settings
-        $activeAddons = Addon::where('category', 'payments')
-            ->where('status', 1)
-            ->get()
-            ->filter(function ($addon) {
-                $addonName = strtolower($addon->name);
-                $settingKey = "{$addonName}_active";
-                return Setting::where('key', $settingKey)->where('value', 1)->exists();
-            })
-            ->pluck('name')
-            ->toArray();
-
-        // Add active addons to mergedData
-        foreach ($activeAddons as $addonName) {
-            $mergedData[] = ['name' => $addonName];
-        }
-
-        return $mergedData;
     }
 }

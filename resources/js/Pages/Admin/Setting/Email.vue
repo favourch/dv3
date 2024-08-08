@@ -40,7 +40,7 @@
                             <FormInput v-model="form.mail_config.reply_to_address" :name="$t('Reply to address')" :error="form.errors['mail_config.reply_to_address']" :type="'email'" :class="'col-span-1'"/>
                         </div>
 
-                        <div class="grid grid-cols-2 pb-6 border-b md:w-2/3">
+                        <div class="grid grid-cols-2 pb-10 border-b md:w-2/3">
                             <div class="relative flex gap-x-3 mt-4 col-span-2">
                                 <div class="flex items-center">
                                     <label @click="toggleSmtp()" for="myCheckbox" class="cursor-pointer">
@@ -65,15 +65,9 @@
                                     <span @click="toggleVerification()" class="ml-2 text-[14px] cursor-pointer">{{ $t('Require email verification for new accounts') }}</span>
                                 </div>
                             </div>
-                            <!--<div class="mt-6">
-                                <button :class="['inline-flex justify-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2', { 'opacity-50': isLoading }]">
-                                    <svg v-if="isLoading" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2A10 10 0 1 0 22 12A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8A8 8 0 0 1 12 20Z" opacity=".5"/><path fill="currentColor" d="M20 12h2A10 10 0 0 0 12 2V4A8 8 0 0 1 20 12Z"><animateTransform attributeName="transform" dur="1s" from="0 12 12" repeatCount="indefinite" to="360 12 12" type="rotate"/></path></svg>
-                                    <span v-else>{{ $t('Send test email') }}</span>
-                                </button>
-                            </div>-->
                         </div>
 
-                        <div class="mt-1 flex items-center justify-end gap-x-6 md:w-2/3 pt-2">
+                        <div class="mt-6 flex items-center justify-end gap-x-6 md:w-2/3">
                             <button type="button" class="text-sm leading-6 text-gray-900">{{ $t('Cancel') }}</button>
                             <button
                                 :class="['inline-flex justify-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2', { 'opacity-50': isLoading }]"

@@ -1,8 +1,6 @@
 <?php
 
 namespace App\Models;
-
-use App\Helpers\DateTimeHelper;
 use App\Http\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,25 +11,6 @@ class Campaign extends Model {
 
     protected $guarded = [];
     public $timestamps = false;
-
-    public function getCreatedAtAttribute($value)
-    {
-        return DateTimeHelper::convertToOrganizationTimezone($value)->toDateTimeString();
-    }
-
-    public function getDeletedAtAttribute($value)
-    {
-        return DateTimeHelper::convertToOrganizationTimezone($value)->toDateTimeString();
-    }
-
-    public function getScheduledAtAttribute($value)
-    {
-        return DateTimeHelper::convertToOrganizationTimezone($value)->toDateTimeString();
-    }
-
-    public function organization(){
-        return $this->belongsTo(Organization::class, 'organization_id', 'id');
-    }
 
     public function template(){
         return $this->belongsTo(Template::class, 'template_id', 'id');

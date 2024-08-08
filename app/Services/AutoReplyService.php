@@ -92,50 +92,22 @@ class AutoReplyService
 
     public function checkAutoReply(Chat $chat)
     {
-        if(json_decode($chat->metadata)->type == 'text'){
-            $text = json_decode($chat->metadata)->text->body;
-        } else if(json_decode($chat->metadata)->type == 'button'){
-            $text = json_decode($chat->metadata)->button->payload;
-        }
-        
-        $receivedMessage = " " . strtolower($text);
-        $autoReplies = AutoReply::where('organization_id', $chat->organization_id)
-            ->where('deleted_at', null)
-            ->get();
+        $text = json_decode($chat->metadata)->text->body;
+        $autoReplies = AutoReply::where('organization_id', $chat->organization_id)->where('deleted_at', null)->get();
 
         foreach ($autoReplies as $autoReply) {
-            $triggerValues = $this->getTriggerValues($autoReply->trigger);
+            // Check for exact match
+            if ($autoReply->match_criteria === 'exact match' && strtolower($text) === strtolower($autoReply->trigger)) {
+                $this->sendReply($chat, $autoReply);
+                break;
+            }
 
-            foreach ($triggerValues as $trigger) {
-                if ($this->checkMatch($receivedMessage, $trigger, $autoReply->match_criteria)) {
-                    $this->sendReply($chat, $autoReply);
-                    break 2; // Exit both foreach loops
-                }
+            // Check for partial match (contains)
+            if ($autoReply->match_criteria === 'contains' && stripos($text, $autoReply->trigger) !== false) {
+                $this->sendReply($chat, $autoReply);
+                break;
             }
         }
-    }
-
-    private function getTriggerValues($trigger)
-    {
-        return is_string($trigger) && strpos($trigger, ',') !== false
-            ? explode(',', $trigger)
-            : (array) $trigger;
-    }
-
-    private function checkMatch($receivedMessage, $trigger, $criteria)
-    {
-        $normalizedTrigger = strtolower(trim($trigger));
-
-        if ($criteria === 'exact match') {
-            return $receivedMessage === " " . $normalizedTrigger;
-        } else if ($criteria === 'contains') {
-            $triggerWords = explode(' ', $normalizedTrigger);
-            $pattern = '/\b(' . implode('|', array_map('preg_quote', $triggerWords)) . ')\b/i';
-
-            return preg_match($pattern, $receivedMessage) === 1;
-        }
-    
-        return false;
     }
 
     protected function sendReply(Chat $chat, AutoReply $autoreply)
@@ -150,7 +122,7 @@ class AutoReplyService
             Log:info($message);
             $this->initializeWhatsappService($organization_id)->sendMessage($contact->uuid, $message);
         } else if($replyType === 'audio' || $replyType === 'image'){
-            $this->initializeWhatsappService($organization_id)->sendMedia($contact->uuid, $replyType, $metadata->data->file->name, $metadata->data->file->location, $metadata->data->file->url, $metadata->data->file->location);
+            $this->initializeWhatsappService($organization_id)->sendMedia($contact->uuid, $replyType, $metadata->data->file->name, $metadata->data->file->location, $metadata->data->file->url);
         }
     }
 

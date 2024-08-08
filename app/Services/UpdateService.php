@@ -7,13 +7,12 @@ use App\Models\Chat;
 use App\Models\ChatLog;
 use App\Models\ChatNote;
 use App\Models\ChatTicketLog;
-use App\Services\ModuleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 
 class UpdateService
 {
-    public function migrate(Request $request, $version){
+    public function migrate($version){
         if($version == '1.3'){
             $chats = Chat::get();
             $ticket_logs = ChatTicketLog::get();
@@ -73,20 +72,7 @@ class UpdateService
                 '--class' => 'AddonsTableSeeder',
                 '--force' => true,
             ]);
-        } else if($version == '1.7'){
-            $seedOutput = Artisan::call('db:seed', [
-                '--class' => 'AddonsTableSeeder2',
-                '--force' => true,
-            ]);
-        } else if($version == '1.8'){
-            $seedOutput = Artisan::call('db:seed', [
-                '--class' => 'PageSeeder',
-                '--force' => true,
-            ]);
         }
-
-        $ModuleService = new ModuleService;
-        $ModuleService->update($request->purchase_code, 'Embedded Signup');
 
         return true;
     }

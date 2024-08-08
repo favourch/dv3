@@ -7,7 +7,7 @@ use App\Mail\CustomEmail;
 use App\Models\EmailLog;
 use App\Models\EmailTemplate;
 use App\Models\Setting;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -34,11 +34,7 @@ class Email
             $subject = self::replacePlaceholders($emailTemplate->subject, $inviter, $link);
             $body = self::replacePlaceholders($emailTemplate->body, $inviter, $link);
 
-            try {
-                Mail::to($recipientEmail)->queue(new CustomEmail($subject, $body));
-            } catch (\Exception $e) {
-                Log::error($e->getMessage());
-            }
+            Mail::to($recipientEmail)->queue(new CustomEmail($subject, $body));
         }
     }
 
@@ -51,11 +47,7 @@ class Email
             $subject = self::replacePlaceholders($emailTemplate->subject, $recipient, $link);
             $body = self::replacePlaceholders($emailTemplate->body, $recipient, $link);
 
-            try {
-                Mail::to($recipient->email)->queue(new CustomEmail($subject, $body));
-            } catch (\Exception $e) {
-                Log::error($e->getMessage());
-            }
+            Mail::to($recipient->email)->queue(new CustomEmail($subject, $body));
         }
     }
 
@@ -69,9 +61,9 @@ class Email
             $body = self::replacePlaceholders($emailTemplate->body, $recipient, NULL, $plan);
 
             try {
-                Mail::to($recipient->email)->queue(new CustomEmail($subject, $body));
+                $email = Mail::to($recipient->email)->queue(new CustomEmail($subject, $body));
             } catch (\Exception $e) {
-                Log::error($e->getMessage());
+                //dd($e->getMessage());
             }
         }
     }
@@ -86,9 +78,9 @@ class Email
             $body = self::replacePlaceholders($emailTemplate->body, $recipient);
 
             try {
-                Mail::to($recipient->email)->queue(new CustomEmail($subject, $body));
+                $email = Mail::to($recipient->email)->queue(new CustomEmail($subject, $body));
             } catch (\Exception $e) {
-                Log::error($e->getMessage());
+                //dd($e->getMessage());
             }
         }
     }

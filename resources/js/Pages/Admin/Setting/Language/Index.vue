@@ -14,7 +14,7 @@
         </div>
 
         <!-- Table Component-->
-        <LangTable :rows="props.rows" :defaultLanguage="props.default_language" @edit="openModal" @delete="openAlert" />
+        <LangTable :rows="props.rows" @edit="openModal" @delete="openAlert" />
 
         <!-- Form Modal Component-->
         <FormModal 
@@ -38,7 +38,7 @@
     import FormSelect from '@/Components/FormSelect.vue';
     import { trans } from 'laravel-vue-i18n';
 
-    const props = defineProps(['rows', 'config', 'default_language']);
+    const props = defineProps({ rows: Object, config: Object });
     const isOpenFormModal = ref(false);
     const label = ref('Add Tax Rate');
     const formUrl = ref('/admin/tax-rates');

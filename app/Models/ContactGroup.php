@@ -4,15 +4,12 @@ namespace App\Models;
 use App\Http\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ContactGroup extends Model {
     use HasFactory;
     use HasUuid;
-    use SoftDeletes;
 
     protected $guarded = [];
-    protected $dates = ['deleted_at'];
     public $timestamps = true;
 
     public function contacts(){

@@ -1,33 +1,18 @@
 <?php
 
 namespace App\Models;
-
-use App\Helpers\DateTimeHelper;
 use App\Http\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Propaganistas\LaravelPhone\PhoneNumber;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Contact extends Model {
     use HasFactory;
     use HasUuid;
-    use SoftDeletes;
 
     protected $guarded = [];
     protected $appends = ['full_name', 'formatted_phone_number'];
-    protected $dates = ['deleted_at'];
     public $timestamps = false;
-
-    public function getCreatedAtAttribute($value)
-    {
-        return DateTimeHelper::convertToOrganizationTimezone($value)->toDateTimeString();
-    }
-
-    public function getUpdatedAtAttribute($value)
-    {
-        return DateTimeHelper::convertToOrganizationTimezone($value)->toDateTimeString();
-    }
 
     public function getAllContacts($organizationId, $searchTerm)
     {
@@ -42,7 +27,6 @@ class Contact extends Model {
             })
             ->orderByDesc('is_favorite')
             ->latest()
-            ->orderBy('id')
             ->paginate(10);
     }
 
@@ -190,47 +174,14 @@ class Contact extends Model {
         return $query->count();
     }
 
-    public function getFirstNameAttribute()
-    {
-        $firstName = $this->attributes['first_name'];
-        $firstName = $this->decodeUnicodeBytes($firstName);
-
-        return $firstName;
-    }
-
-    public function getLastNameAttribute()
-    {
-        $lastName = $this->attributes['last_name'];
-        $lastName = $this->decodeUnicodeBytes($lastName);
-
-        return $lastName;
-    }
-
     public function getFullNameAttribute()
     {
-        $firstName = $this->attributes['first_name'];
-        $lastName = $this->attributes['last_name'];
-
-        // Convert byte sequences to Unicode characters
-        $firstName = $this->decodeUnicodeBytes($firstName);
-        $lastName = $this->decodeUnicodeBytes($lastName);
-
-        // Return the full name combining first name and last name
-        return $firstName . ' ' . $lastName;
-
-        //return "{$this->first_name} {$this->last_name}";
+        return "{$this->first_name} {$this->last_name}";
     }
 
     public function getFormattedPhoneNumberAttribute($value)
     {
         // Use the phone() helper function to format the phone number to international format
         return phone($this->phone)->formatInternational();
-    }
-
-    protected function decodeUnicodeBytes($value)
-    {
-        return preg_replace_callback('/\\\\x([0-9A-F]{2})/i', function ($matches) {
-            return chr(hexdec($matches[1]));
-        }, $value);
     }
 }

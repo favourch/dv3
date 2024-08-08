@@ -8,7 +8,6 @@ use App\Http\Resources\PaymentGatewayResource;
 use App\Http\Requests\StorePaymentGateway;
 use App\Models\PaymentGateway;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule; 
 use Inertia\Inertia;
@@ -31,16 +30,6 @@ class PaymentGatewayController extends BaseController
     }
 
     public function update(StorePaymentGateway $request, $type){
-        if (env('APP_ENV') === 'demo') {
-            // Return a response indicating that the function is not allowed in demo environment
-            return Redirect::back()->with(
-                'status', [
-                    'type' => 'error', 
-                    'message' => __('Updating settings is not allowed in demo.')
-                ]
-            );
-        }
-
         $metadata = [];
 
         switch (strtolower($type)) {

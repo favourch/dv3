@@ -24,18 +24,23 @@ use App\Models\User;
 use App\Services\SocialLoginService;
 use App\Services\TeamService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
+use Auth;
+use Hash;
 use Session;
+use Socialite;
 use Str;
+use Validator;
 
 class AuthController extends BaseController
 {
-    protected $userService;
-    protected $role;
-
+    /**
+     * AuthController constructor.
+     *
+     * @param UserService $userService
+     */
     public function __construct($role = 'user')
     {
         $this->userService = new UserService($role);
@@ -53,14 +58,6 @@ class AuthController extends BaseController
         $user = User::where('email', $request->email)->where('deleted_at', null)->first();
         $guard = $user->role == 'admin' ? 'admin' : 'user';
         Auth::guard($guard)->attempt(['email' => $request->email, 'password' => $request->password]);
-
-        //Check number of organizations
-        if($guard == 'user'){
-            $teams = Team::where('user_id', auth()->user()->id);
-            if($teams->count() == 1){
-                session()->put('current_organization', $teams->first()->organization_id);
-            }
-        }
 
         return redirect($user->role == 'admin' ? 'admin/dashboard' : '/dashboard');
     }
@@ -154,10 +151,6 @@ class AuthController extends BaseController
                         // Send Registration Email
                         Email::send('Registration', $user);
 
-                        if (isset($config->value) && $config->value == '1') {
-                            $user->sendEmailVerificationNotification();
-                        }
-
                         session()->put('current_organization', $organization->id);
                     }
                     
@@ -240,10 +233,6 @@ class AuthController extends BaseController
 
                 Email::send('Registration', $user);
 
-                if (isset($config->value) && $config->value == '1') {
-                    $user->sendEmailVerificationNotification();
-                }
-
                 Auth::guard('user')->login($user, true);
                 
                 return redirect('dashboard');
@@ -303,11 +292,6 @@ class AuthController extends BaseController
     {
         $user = $this->userService->store($request);
         $authService = (new AuthService($user))->authenticateSession($request);
-        $config = Setting::where('key', 'verify_email')->first();
-
-        if (isset($config->value) && $config->value == '1') {
-            $user->sendEmailVerificationNotification();
-        }
 
         return redirect('/dashboard');
     }
@@ -386,30 +370,6 @@ class AuthController extends BaseController
             'status', [
                 'type' => 'success', 
                 'message' => __('Password reset successful!')
-            ]
-        );
-    }
-
-    public function verifyEmail()
-    {
-        if(auth()->user()->email_verified_at != NULL){
-            return redirect('dashboard');
-        } else {
-            $keys = ['logo', 'company_name', 'address', 'email', 'phone', 'socials', 'trial_period'];
-            $data['companyConfig'] = Setting::whereIn('key', $keys)->pluck('value', 'key')->toArray();
-
-            return Inertia::render('Auth/VerifyEmail', $data);
-        }
-    }
-
-    public function sendEmailVerification(Request $request)
-    {
-        $request->user()->sendEmailVerificationNotification();
-
-        return back()->with(
-            'status', [
-                'type' => 'success', 
-                'message' => __('Verification link sent!')
             ]
         );
     }

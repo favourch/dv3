@@ -2,15 +2,14 @@
 
 namespace App\Models;
 
-use App\Mail\CustomEmailVerification;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
     use SoftDeletes;
@@ -96,13 +95,5 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function role(){
         return $this->belongsTo(Role::class, 'role', 'name');
-    }
-
-    public function sendEmailVerificationNotification(){
-        try {
-            \Mail::to($this->email)->send(new CustomEmailVerification($this));
-        } catch (\Exception $e) {
-            \Log::error('Failed to send verification email: ' . $e->getMessage());
-        }
     }
 }
