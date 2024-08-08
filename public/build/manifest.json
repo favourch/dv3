@@ -1,13 +1,13 @@
 {
-  "_prism-c97cd79f.js": {
-    "file": "assets/prism-c97cd79f.js",
+  "_prism-8f9320dc.js": {
+    "file": "assets/prism-8f9320dc.js",
     "imports": [
       "resources/js/app.js"
     ],
     "isDynamicEntry": true
   },
   "node_modules/highlight.js/es/index.js": {
-    "file": "assets/index-cf69e067.js",
+    "file": "assets/index-3208b7b6.js",
     "imports": [
       "resources/js/app.js"
     ],
@@ -65,9 +65,9 @@
     ],
     "dynamicImports": [
       "node_modules/highlight.js/es/index.js",
-      "_prism-c97cd79f.js"
+      "_prism-8f9320dc.js"
     ],
-    "file": "assets/app-107814ff.js",
+    "file": "assets/app-c942a055.js",
     "isEntry": true,
     "src": "resources/js/app.js"
   }
