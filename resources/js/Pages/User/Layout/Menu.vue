@@ -1,20 +1,19 @@
 <template>
     <div v-if="getValueByKey('logo') === null" class="flex items-center justify-between px-5 pt-5 h-20 mb-4">
-        <h1 class="ml-2 text-3xl">{{ getValueByKey('company_name') }}</h1>
-        <!--<LangToggle class="text-black" :languages="languages" :currentLanguage="currentLanguage" />-->
+        <h2 v-if="!menuIconsOnly" class="ml-2 text-2xl">{{ getValueByKey('company_name') }}</h2>
+        <LangToggle v-if="!menuIconsOnly" class="text-black" :languages="languages" :currentLanguage="currentLanguage" />
         <span v-if="isSidebarOpen === true" @click="closeSidebar()">
             <svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path d="M5 5L12 5L19 5"><animate fill="freeze" attributeName="d" dur="0.4s" values="M5 5L12 5L19 5;M5 5L12 12L19 5"/></path><path d="M5 12H19"><animate fill="freeze" attributeName="d" dur="0.4s" values="M5 12H19;M12 12H12"/></path><path d="M5 19L12 19L19 19"><animate fill="freeze" attributeName="d" dur="0.4s" values="M5 19L12 19L19 19;M5 19L12 12L19 19"/></path></g></svg>
         </span>
     </div>
     <div v-else class="flex items-center justify-between px-5 pt-5 h-20 mb-1">
         <Link href="/dashboard">
-            <img v-if="!menuIconsOnly" :src="'/media/' + getValueByKey('logo')" alt="Logo" class="w-32 object-contain h-full ps-2">
-            <img v-else :src="'/media/' + getValueByKey('favicon')" alt=""  class="w-32 object-contain h-full">
+            <img :src="'/media/' + getValueByKey('logo')" alt="{{ getValueByKey('company_name') }}" class="w-32 object-contain h-full ps-2">
         </Link>
-        <LangToggle class="text-black" :class="menuIconsOnly ? 'hidden' : ''" :languages="languages" :currentLanguage="currentLanguage" />
         <span v-if="isSidebarOpen === true" @click="closeSidebar()">
             <svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path d="M5 5L12 5L19 5"><animate fill="freeze" attributeName="d" dur="0.4s" values="M5 5L12 5L19 5;M5 5L12 12L19 5"/></path><path d="M5 12H19"><animate fill="freeze" attributeName="d" dur="0.4s" values="M5 12H19;M12 12H12"/></path><path d="M5 19L12 19L19 19"><animate fill="freeze" attributeName="d" dur="0.4s" values="M5 19L12 19L19 19;M5 19L12 12L19 19"/></path></g></svg>
         </span>
+        <LangToggle class="text-black" :languages="languages" :currentLanguage="currentLanguage" />
     </div>
     <div class="flex-grow space-y-3 px-2 overflow-y-scroll">
         <div class="flex-1">

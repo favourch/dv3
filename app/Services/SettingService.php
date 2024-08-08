@@ -93,10 +93,18 @@ class SettingService
                     Artisan::call('cache:clear');
                     Cache::flush();
 
-                    EnvSet::setKey('AWS_ACCESS_KEY_ID', $value['access_key']);
-                    EnvSet::setKey('AWS_SECRET_ACCESS_KEY', $value['secret_key']);
-                    EnvSet::setKey('AWS_DEFAULT_REGION', $value['default_region']);
-                    EnvSet::setKey('AWS_BUCKET', $value['bucket']);
+                    if (isset($value['access_key'])) {
+                        EnvSet::setKey('AWS_ACCESS_KEY_ID', $value['access_key']);
+                    }
+                    if (isset($value['secret_key'])) {
+                        EnvSet::setKey('AWS_SECRET_ACCESS_KEY', $value['secret_key']);
+                    }
+                    if (isset($value['default_region'])) {
+                        EnvSet::setKey('AWS_DEFAULT_REGION', $value['default_region']);
+                    }
+                    if (isset($value['bucket'])) {
+                        EnvSet::setKey('AWS_BUCKET', $value['bucket']);
+                    }
                     EnvSet::save();
 
                     $value = json_encode($value);

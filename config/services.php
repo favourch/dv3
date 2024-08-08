@@ -51,6 +51,14 @@ return [
     'flutterwave' => [
         'class' => App\Services\FlutterwaveService::class,
     ],
+
+    'clickpay' => [
+        'class' => Modules\Clickpaysa\Controllers\ProcessPayment::class,
+    ],
+
+    'razorpay' => [
+        'class' => Modules\Razorpay\Controllers\ProcessPayment::class,
+    ],
 ];
 
 

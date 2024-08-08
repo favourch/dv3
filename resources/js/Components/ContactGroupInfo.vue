@@ -28,8 +28,13 @@
     ];
 
     const form2 = useForm({'test': null});
+
     const deleteRow = async() => {
-        form2.delete('/contact-groups/' + group.value.uuid);
+        router.visit('/contact-groups', {
+            method: 'delete',
+            data: { 'uuids': [ group.value.uuid ]},
+            preserveState: true
+        })
     }
 
     const openModal = () => {

@@ -181,7 +181,7 @@
         </div>
     </div>
     <div class="flex-grow overflow-y-auto h-[65vh]" ref="scrollContainer">
-        <Link :href="'/chats/' + contact.uuid + '?page=' + props.rows.meta.current_page" class="block border-b pr-[9px] group-hover:pr-0" v-for="(contact, index) in rows.data" :key="index">
+        <Link :href="'/chats/' + contact.uuid + '?page=' + props.rows.meta.current_page" class="block border-b group-hover:pr-0" v-for="(contact, index) in rows.data" :key="index">
             <div class="flex space-x-2 hover:bg-gray-50 cursor-pointer py-3 px-4">
                 <div class="w-[15%]">
                     <img v-if="contact.avatar" class="rounded-full w-10 h-10" :src="contact.avatar">
@@ -194,6 +194,8 @@
                     </div>
                     <div v-if="contact.last_chat.deleted_at === null" class="flex justify-between">
                         <p v-if="contentType(contact.last_chat.metadata) ==='text'" class="text-slate-500 text-xs truncate self-end"> {{ content(contact.last_chat.metadata).text.body }}</p>
+                        <p v-if="contentType(contact.last_chat.metadata) ==='button'" class="text-slate-500 text-xs truncate self-end"> {{ content(contact.last_chat.metadata).button.text }}</p>
+                        <p v-if="contentType(contact.last_chat.metadata) ==='interactive'" class="text-slate-500 text-xs truncate self-end"> {{ content(contact.last_chat.metadata).interactive.button_reply.title }}</p>
                         <p v-if="contentType(contact.last_chat.metadata) ==='image'" class="text-slate-500 text-xs truncate self-end"> 
                             <div class="flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.9 13.98l2.1 2.53l3.1-3.99c.2-.26.6-.26.8.01l3.51 4.68a.5.5 0 0 1-.4.8H6.02c-.42 0-.65-.48-.39-.81L8.12 14c.19-.26.57-.27.78-.02z"/></svg>

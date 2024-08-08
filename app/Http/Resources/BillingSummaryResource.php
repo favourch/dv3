@@ -17,8 +17,6 @@ class BillingSummaryResource extends JsonResource
     {
         $data = parent::toArray($request);
         $data['amount'] = number_format($this->amount, 2);
-        $data['updated_at'] = DateTimeHelper::formatDate($this->updated_at);
-        $data['created_at'] = DateTimeHelper::formatDate($this->created_at);
 
         return $data;
     }

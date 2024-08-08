@@ -12,7 +12,7 @@ use App\Services\SubscriptionService;
 use App\Traits\ConsumesExternalServices;
 use Carbon\Carbon;
 use CurrencyHelper;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Helper;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Exception\RequestException;
@@ -97,7 +97,7 @@ class PayPalService
 
     public function handlePayment($amount, $planId = NULL)
     {
-        $currency = 'USD';
+        $currency = Setting::where('key', 'currency')->first()->value;
         $returnUrl = url('billing');
         $cancelUrl = url('billing');
 

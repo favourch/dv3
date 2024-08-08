@@ -13,7 +13,7 @@ class OrganizationController extends BaseController
 {
     public function index(){
         $data['organizations'] = Team::with('organization')->where('user_id', auth()->user()->id)->get();
-
+        
         return Inertia::render('User/OrganizationSelect', $data);
     }
 

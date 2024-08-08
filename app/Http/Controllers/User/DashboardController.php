@@ -38,7 +38,7 @@ class DashboardController extends BaseController
         $organizationId = session()->get('current_organization');
         $organization = Organization::where('id', $organizationId)->first();
         $config = $organization->metadata ? json_decode($organization->metadata, true) : [];
-        $settings = Setting::whereIn('key', ['is_embedded_signup_active', 'whatsapp_app_id', 'whatsapp_config_id'])
+        $settings = Setting::whereIn('key', ['is_embedded_signup_active', 'whatsapp_client_id', 'whatsapp_config_id'])
             ->pluck('value', 'key');
 
         $data['organization'] = $organization;
@@ -51,7 +51,7 @@ class DashboardController extends BaseController
         $data['inbound'] = $this->getChatCounts('inbound');
         $data['outbound'] = $this->getChatCounts('outbound');
         $data['embeddedSignupActive'] = $settings->get('is_embedded_signup_active', 0);
-        $data['appId'] = $settings->get('whatsapp_app_id', null);
+        $data['appId'] = $settings->get('whatsapp_client_id', null);
         $data['configId'] = $settings->get('whatsapp_config_id', null);
         $data['title'] = __('Dashboard');
 

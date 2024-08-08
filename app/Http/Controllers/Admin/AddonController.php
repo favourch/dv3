@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller as BaseController;
 use App\Http\Resources\AddonResource;
 use App\Models\Addon;
 use App\Models\Setting;
-use App\Services\AddonInstallerService;
+use App\Services\ModuleService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -47,8 +47,8 @@ class AddonController extends BaseController
 
     public function install(Request $request)
     {
-        $addonInstallerService = new addonInstallerService;
+        $ModuleService = new ModuleService;
 
-        return $addonInstallerService->install($request);
+        return $ModuleService->install($request);
     }
 }

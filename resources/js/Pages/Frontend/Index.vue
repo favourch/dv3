@@ -15,10 +15,10 @@
         </div>
         <section id="section1" class="pt-4 md:pt-10 px-5 md:px-10 lg:px-20 2xl:px-60 relative">
             <div class="flex justify-between items-center">
-                <div>
+                <Link href="/" class="inline-block">
                     <img class="max-w-[150px]" v-if="props.companyConfig.logo" :src="'/media/' + props.companyConfig.logo" :alt="props.companyConfig.company_name">
                     <h1 v-else class="text-2xl">{{ props.companyConfig.company_name }}</h1>
-                </div>
+                </Link>
                 <div class="hidden lg:flex justify-center items-center text-md space-x-8">
                     <a href="#section2" class="cursor-pointer hover:border-b-2 border-black">{{ $t('Features') }}</a>
                     <a href="#section4" class="cursor-pointer hover:border-b-2 border-black">{{ $t('Pricing') }}</a>
@@ -441,11 +441,16 @@
                                 <div>
                                     <a href="#section5" class="border-b-2 border-[#fafbfb] hover:border-b-2 hover:border-black">{{ $t('Reviews') }}</a>
                                 </div>
-                            </div>
-                            <div class="space-y-2">
                                 <div>
                                     <a href="#section6" class="border-b-2 border-[#fafbfb] hover:border-b-2 hover:border-black">{{ $t('FAQs') }}</a>
                                 </div>
+                            </div>
+                            <div v-if="pages.length > 0" class="space-y-2">
+                                <div v-for="page in pages" :key="page.id">
+                                    <Link :href="'/pages/' + formattedName(page.name)" class="border-b-2 border-[#fafbfb] hover:border-b-2 hover:border-black">{{ $t(page.name) }}</Link>
+                                </div>
+                            </div>
+                            <div class="space-y-2">
                                 <div>
                                     <Link href="/signup" class="border-b-2 border-[#fafbfb] hover:border-b-2 hover:border-black">{{ $t('Sign up') }}</Link>
                                 </div>
@@ -489,11 +494,11 @@
     </div>
 </template>
 <script setup>
-    import { ref, onMounted, onBeforeUnmount } from 'vue';
+    import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
     import { Link } from "@inertiajs/vue3";
     import LangToggle from '@/Components/LangToggle.vue';
 
-    const props = defineProps({ faqs: Object, plans: Object, reviews: Object, companyConfig: Object, languages: Object, currentLanguage:String, currency: String });
+    const props = defineProps({ faqs: Object, plans: Object, reviews: Object, companyConfig: Object, languages: Object, currentLanguage:String, currency: String, pages: Object });
 
     const currentYear = new Date().getFullYear();
     const facebookUrl = ref(null);
@@ -524,6 +529,12 @@
             return null;
         }
     }
+
+    const formattedName = computed(() => {
+        return (value) => {
+            return value.trim().toLowerCase().replace(/\s+/g, '-');
+        };
+    });
 
     const selectedFeature = ref(1);
     const selectedFaq = ref(1);

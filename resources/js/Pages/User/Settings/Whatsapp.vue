@@ -33,7 +33,7 @@
                             </div>
                             <div class="border-r">
                                 <div>{{ $t('Message limits') }}</div>
-                                <div>{{ settings.whatsapp?.max_daily_conversation_per_phone ? settings.whatsapp?.max_daily_conversation_per_phone + 'BICs / 24hrs' : 'N/A' }}</div>
+                                <div>{{ settings.whatsapp?.messaging_limit_tier ? settings.whatsapp?.messaging_limit_tier : 'N/A' }}</div>
                             </div>
                             <div>
                                 <div>{{ $t('Number status') }}</div>
@@ -329,17 +329,27 @@
 
         router.visit(`/settings/whatsapp/refresh`, {
             method: 'get',
-            preserveState: false,
+            preserveState: true,
             onFinish: () => {
                 refreshLoading.value = false;
-            }
+            },
+            onSuccess: () => {
+                router.visit('/settings/whatsapp', {
+                    preserveState: false,
+                });
+            },
         })
     }
 
     const deleteIntegration = () => {
         router.delete(`/settings/whatsapp/business-profile`, {
             onBefore: () => confirm('Are you sure you want to delete your integration?'),
-            preserveState: false,
+            preserveState: true,
+            onSuccess: () => {
+                router.visit('/settings/whatsapp', {
+                    preserveState: false,
+                });
+            },
         })
     }
 </script>

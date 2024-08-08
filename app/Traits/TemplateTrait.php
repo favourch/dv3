@@ -15,8 +15,12 @@ trait TemplateTrait{
         $metadata = json_decode($campaign->metadata);
         //dd($metadata);
 
-        $template['name'] = $campaignTemplate->name;
-        $template['language']['code'] = $campaignTemplate->language;
+        return $this->buildTemplate($campaignTemplate->name, $campaignTemplate->language, $metadata, $contact);
+    }
+
+    function buildTemplate($templateName, $templateLanguage, $metadata, $contact){
+        $template['name'] = $templateName;
+        $template['language']['code'] = $templateLanguage;
         $template['components'] = [];
 
         if ($metadata->header && $metadata->header->parameters) {

@@ -2,7 +2,8 @@
 
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
-use Modules\EmbeddedSignup\Providers\EmbeddedSignupServiceProvider;
+//use Modules\EmbeddedSignup\Providers\EmbeddedSignupServiceProvider;
+//use Modules\Clickpay\Providers\ClickpayServiceProvider;
 
 // Define the providers array separately
 $providers = [
@@ -23,6 +24,14 @@ $providers = [
 // Conditionally add EmbeddedSignupServiceProvider if it exists
 if (class_exists(\Modules\EmbeddedSignup\Providers\EmbeddedSignupServiceProvider::class)) {
     $providers[] = \Modules\EmbeddedSignup\Providers\EmbeddedSignupServiceProvider::class;
+}
+
+if (class_exists(\Modules\Clickpaysa\Providers\ClickpayServiceProvider::class)) {
+    $providers[] = \Modules\Clickpaysa\Providers\ClickpayServiceProvider::class;
+}
+
+if (class_exists(\Modules\Razorpay\Providers\RazorpayServiceProvider::class)) {
+    $providers[] = \Modules\Razorpay\Providers\RazorpayServiceProvider::class;
 }
 
 return [
@@ -64,7 +73,7 @@ return [
     |
     */
 
-    'debug' => (bool) env('APP_DEBUG', true),
+    'debug' => (bool) env('APP_DEBUG', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -77,7 +86,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'https://digilearns.mysustainablefuture.org'),
+    'url' => env('APP_URL', 'http://localhost'),
 
     'asset_url' => env('ASSET_URL'),
 

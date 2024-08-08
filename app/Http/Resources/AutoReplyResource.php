@@ -16,7 +16,10 @@ class AutoReplyResource extends JsonResource
     public function toArray(Request $request): array
     {
         $data = parent::toArray($request);
-        $data['updated_at'] = DateTimeHelper::formatDate($this->updated_at);
+
+        // Convert updated_at to the organization's timezone and format it
+        $updatedAt = DateTimeHelper::convertToOrganizationTimezone($this->updated_at);
+        $data['updated_at'] = DateTimeHelper::formatDate($updatedAt);
 
         return $data;
     }

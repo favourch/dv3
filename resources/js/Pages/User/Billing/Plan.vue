@@ -123,8 +123,8 @@
                                 <h3>{{ amountDue }}</h3>
                             </div>
                             <hr>
-                            <h2 v-if="amountDue > 0" class="text-[14px] mt-3 mb-2">{{ $t('Pay via') }}</h2>
-                            <div v-if="amountDue > 0" class="flex grid grid-cols-2 gap-2">
+                            <h2 v-if="parseInt(amountDue) > 0" class="text-[14px] mt-3 mb-2">{{ $t('Pay via') }}</h2>
+                            <div v-if="parseInt(amountDue) > 0" class="flex grid grid-cols-2 gap-2">
                                 <div v-for="(item, index) in props.methods" :key="index" class="">
                                     <div class="flex items-center">
                                         <label @click="selectPayment(item.name)" for="myCheckbox" class="cursor-pointer">

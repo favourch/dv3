@@ -33,6 +33,7 @@
                         </div>
                         <div class="flex justify-center space-x-4 mt-6">
                             <button @click="openModal()" class="bg-primary rounded-lg text-sm text-white p-2 px-8 text-center capitalize">{{ $t('Add group') }}</button>
+                            <button @click="isOpenModal = true" class="bg-primary rounded-lg text-sm text-white p-2 px-8 text-center">{{ $t('Bulk upload') }}</button>
                         </div>
                     </div>
                 </div>
@@ -48,11 +49,14 @@
         :formInputs="formInputs"
         @callback="handleCallback"
     />
+
+    <ContactImportModal :type="'group'" v-model:modelValue="isOpenModal"/>
 </template>
 <script setup>
     import AppLayout from "./../Layout/App.vue";
     import { ref } from 'vue';
     import ContactGroupInfo from '@/Components/ContactGroupInfo.vue';
+    import ContactImportModal from '@/Components/ContactImportModal.vue';
     import ContactTable from '@/Components/Tables/ContactTable.vue';
     import Dropdown from '@/Components/Dropdown.vue';
     import DropdownItemGroup from '@/Components/DropdownItemGroup.vue';
@@ -62,6 +66,7 @@
     import { trans } from 'laravel-vue-i18n';
 
     const props = defineProps({ rows: Object, filters: Object, rowCount: Number, group: Object });
+    const isOpenModal = ref(false);
     const currentUrl = window.location.href;
     const isOpenFormModal = ref(false);
     const formUrl = ref(currentUrl);

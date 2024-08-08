@@ -61,12 +61,22 @@ class CampaignController extends BaseController
             return Inertia::render('User/Campaign/Create', $data);
         } else {
             $data['campaign'] = Campaign::with('contactGroup', 'template')->where('uuid', $uuid)->first();
-            $data['campaign']->load('campaignLogs');
-            $data['campaign']['total_message_count'] = $data['campaign']->contactsCount();
-            $data['campaign']['total_sent_count'] = $data['campaign']->sentCount();
-            $data['campaign']['total_delivered_count'] = $data['campaign']->deliveryCount();
-            $data['campaign']['total_read_count'] = $data['campaign']->readCount();
-            $data['campaign']['total_failed_count'] = $data['campaign']->failedCount();
+            if ($data['campaign']) {
+                $data['campaign']->load('campaignLogs');
+                $data['campaign']['total_message_count'] = $data['campaign']->contactsCount();
+                $data['campaign']['total_sent_count'] = $data['campaign']->sentCount();
+                $data['campaign']['total_delivered_count'] = $data['campaign']->deliveryCount();
+                $data['campaign']['total_read_count'] = $data['campaign']->readCount();
+                $data['campaign']['total_failed_count'] = $data['campaign']->failedCount();
+            }else{
+                $data['campaign']->load('campaignLogs');
+                $data['campaign']['total_message_count'] = 0;
+                $data['campaign']['total_sent_count'] = 0;
+                $data['campaign']['total_delivered_count'] = 0;
+                $data['campaign']['total_read_count'] = 0;
+                $data['campaign']['total_failed_count'] = 0;
+            }
+
             $data['filters'] = request()->all(['search']);
 
             $searchTerm = $request->query('search');
@@ -104,8 +114,7 @@ class CampaignController extends BaseController
         return Excel::download(new CampaignDetailsExport($uuid), 'campaign.csv');
     }
 
-    public function delete($uuid)
-    {
+    public function delete($uuid){
         $this->campaignService->destroy($uuid);
 
         return Redirect::back()->with(

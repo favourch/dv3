@@ -24,7 +24,11 @@
     const form = useForm({'test': null});
 
     const deleteRow = async() => {
-        form.delete('/contacts/' + contact.value.uuid);
+        router.visit('/contacts', {
+            method: 'delete',
+            data: { 'uuids': [ contact.value.uuid ]},
+            preserveState: true
+        })
     }
 
     const getAddressDetail = (value, key) => {

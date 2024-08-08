@@ -3,19 +3,24 @@
 namespace App\Services;
 
 use Carbon\Carbon;
-use DB;
 use Helper;
 use App\Models\BillingPayment;
 use App\Models\BillingTransaction;
 use App\Models\PaymentGateway;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\SubscriptionService;
 use App\Traits\ConsumesExternalServices;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class StripeService
 {
+    protected $config;
+    protected $subscriptionService;
+    protected $stripe;
+
     public function __construct()
     {
         $this->subscriptionService = new SubscriptionService();
@@ -31,7 +36,7 @@ class StripeService
             $stripeSession = $this->stripe->checkout->sessions->create([
                 'line_items' => [[
                     'price_data' => [
-                        'currency' => 'usd', 
+                        'currency' => strtolower(Setting::where('key', 'currency')->first()->value), 
                         'product_data' => [ 
                             'name' => 'Subscription Payment' 
                         ], 

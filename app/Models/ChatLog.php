@@ -3,6 +3,7 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Helpers\DateTimeHelper;
 use App\Models\Chat;
 use App\Models\ChatTicket;
 use App\Models\ChatNote;
@@ -12,6 +13,18 @@ class ChatLog extends Model {
 
     protected $guarded = [];
     public $timestamps = false;
+
+    // Accessor to format created_at with organization's timezone
+    public function getCreatedAtAttribute($value)
+    {
+        // Convert the stored UTC timestamp to the organization's timezone
+        return DateTimeHelper::convertToOrganizationTimezone($value)->toDateTimeString();
+    }
+
+    public function getUpdatedAtAttribute($value)
+    {
+        return DateTimeHelper::convertToOrganizationTimezone($value)->toDateTimeString();
+    }
 
     public function entity()
     {

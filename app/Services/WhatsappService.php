@@ -29,8 +29,9 @@ class WhatsappService
     private $phoneNumberId;
     private $organizationId;
     private $wabaId;
+    private $messengerPageId;
 
-    public function __construct($accessToken, $apiVersion, $appId, $phoneNumberId, $wabaId, $organizationId)
+    public function __construct($accessToken, $apiVersion, $appId, $phoneNumberId, $wabaId, $organizationId, $messengerPageId)
     {
         $this->accessToken = $accessToken;
         $this->apiVersion = $apiVersion;
@@ -38,6 +39,7 @@ class WhatsappService
         $this->phoneNumberId = $phoneNumberId;
         $this->wabaId = $wabaId;
         $this->organizationId = $organizationId;
+        $this->messengerPageId = $messengerPageId;
 
         Config::set('broadcasting.connections.pusher', [
             'driver' => 'pusher',
@@ -50,14 +52,90 @@ class WhatsappService
         ]);
     }
 
-    /**
-     * This function sends a text message via a POST request to the specified phone number using Facebook's messaging API.
-     *
-     * @param string $phoneNumber The phone number of the recipient.
-     * @param string $messageContent The content of the message to be sent.
-     * @return mixed Returns the response from the HTTP request.
-     */
-    public function sendMessage($contactUuId, $messageContent)
+    private function sendMessengerMessage($contactUuId, $messageContent, $type, $buttons, $header, $footer)
+    {
+        $contact = Contact::where('uuid', $contactUuId)->first();
+        $url = "https://graph.facebook.com/{$this->apiVersion}/me/messages";
+
+        $headers = $this->setMessengerHeaders();
+
+        $requestData['recipient']['id'] = $contact->messenger_id; // Assume messenger_id is stored in the contacts table
+        if ($type == "text") {
+            $requestData['message']['text'] = clean($messageContent);
+        } else if ($type == "interactive") {
+            $requestData['message']['attachment'] = [
+                'type' => 'template',
+                'payload' => [
+                    'template_type' => 'button',
+                    'text' => clean($messageContent),
+                    'buttons' => [],
+                ],
+            ];
+
+            foreach ($buttons as $button) {
+                $requestData['message']['attachment']['payload']['buttons'][] = [
+                    'type' => 'postback',
+                    'title' => $button['title'],
+                    'payload' => $button['id'],
+                ];
+            }
+        }
+
+        $responseObject = $this->sendHttpRequest('POST', $url, $requestData, $headers);
+
+        if ($responseObject->success === true) {
+            $response['text'] = clean($messageContent);
+            $response['type'] = 'text';
+
+            $chat = Chat::create([
+                'organization_id' => $contact->organization_id,
+                'wam_id' => $responseObject->data->message_id,
+                'contact_id' => $contact->id,
+                'type' => 'outbound',
+                'metadata' => json_encode($response),
+                'status' => 'delivered',
+            ]);
+
+            $chat = Chat::with('contact', 'media')->where('id', $chat->id)->first();
+            $responseObject->data->chat = $chat;
+
+            $chatlogId = ChatLog::insertGetId([
+                'contact_id' => $contact->id,
+                'entity_type' => 'chat',
+                'entity_id' => $chat->id,
+                'created_at' => now()
+            ]);
+
+            $chatLogArray = ChatLog::where('id', $chatlogId)->where('deleted_at', null)->first();
+            $chatArray = array([
+                'type' => 'chat',
+                'value' => $chatLogArray->relatedEntities
+            ]);
+
+            event(new NewChatEvent($chatArray, $contact->organization_id));
+        }
+
+        return $responseObject;
+    }
+
+    public function setMessengerHeaders()
+    {
+        return [
+            'Authorization' => 'Bearer ' . $this->accessToken,
+            'Content-Type' => 'application/json',
+        ];
+    }
+
+    public function sendMessage($contactUuId, $messageContent, $type="text", $buttons = [], $header = null, $footer = null, $platform = "whatsapp")
+    {
+        if ($platform === "whatsapp") {
+            return $this->sendWhatsappMessage($contactUuId, $messageContent, $type, $buttons, $header, $footer);
+        } else if ($platform === "messenger") {
+            return $this->sendMessengerMessage($contactUuId, $messageContent, $type, $buttons, $header, $footer);
+        }
+    }
+
+    private function sendWhatsappMessage($contactUuId, $messageContent, $type="text", $buttons = [], $header = null, $footer = null)
     {
         $contact = Contact::where('uuid', $contactUuId)->first();
         $url = "https://graph.facebook.com/{$this->apiVersion}/{$this->phoneNumberId}/messages";
@@ -67,9 +145,38 @@ class WhatsappService
         $requestData['messaging_product'] = 'whatsapp';
         $requestData['recipient_type'] = 'individual';
         $requestData['to'] = $contact->phone;
-        $requestData['type'] = 'text';
-        $requestData['text']['preview_url'] = true; //If you have added url either http or https a preview will be displayed
-        $requestData['text']['body'] = clean($messageContent);
+        if($type == "text"){
+            $requestData['type'] = 'text';
+            $requestData['text']['preview_url'] = true; //If you have added url either http or https a preview will be displayed
+            $requestData['text']['body'] = clean($messageContent);
+        } else if($type == "interactive"){
+            $requestData['type'] = 'interactive';
+            $requestData['interactive']['type'] = 'button';
+            foreach($buttons as $button){
+                $requestData['interactive']['action']['buttons'][] = [
+                    'type' => 'reply',
+                    'reply' => [
+                        'id' => $button['id'],
+                        'title' => $button['title'],
+                    ],
+                ];
+            }
+
+            if ($header != null) {
+                $requestData['interactive']['header'] = [
+                    'type' => 'text',
+                    'text' => clean($header),
+                ];
+            }
+
+            $requestData['interactive']['body']['text'] = clean($messageContent);
+
+            if ($footer != null) {
+                $requestData['interactive']['footer'] = [
+                    'text' => clean($footer),
+                ];
+            }
+        }
 
         $responseObject = $this->sendHttpRequest('POST', $url, $requestData, $headers);
 
@@ -108,13 +215,6 @@ class WhatsappService
         return $responseObject;
     }
 
-    /**
-     * This function sends a text message via a POST request to the specified phone number using Facebook's messaging API.
-     *
-     * @param string $phoneNumber The phone number of the recipient.
-     * @param string $messageContent The content of the message to be sent.
-     * @return mixed Returns the response from the HTTP request.
-     */
     public function sendTemplateMessage($contactUuId, $templateContent, $campaignId = NULL)
     {
         $contact = Contact::where('uuid', $contactUuId)->first();
@@ -130,16 +230,19 @@ class WhatsappService
 
         $responseObject = $this->sendHttpRequest('POST', $url, $requestData, $headers);
 
-        //dd($responseObject);
-
         if($responseObject->success === true){
+            if($campaignId != NULL){
+                $campaign = Campaign::where('id', $campaignId)->first();
+                $templateMetadata = json_decode($campaign->metadata);
+            }
+
             $chat = Chat::create([
                 'organization_id' => $contact->organization_id,
                 'wam_id' => $responseObject->data->messages[0]->id,
                 'contact_id' => $contact->id,
                 'type' => 'outbound',
-                'metadata' => $this->buildTemplateChatMessage($campaignId, $contactUuId),
-                'media_id' => $this->getMediaIdFromCampaign($campaignId),
+                'metadata' => $campaignId != NULL ? $this->buildCampaignTemplateChatMessage($templateMetadata, $contactUuId) : $this->buildTemplateChatMessage($templateContent, $contact),
+                'media_id' => $campaignId != NULL ? $this->getMediaIdFromCampaign($campaignId) : NULL,
                 'status' => $responseObject->data->messages[0]->message_status,
                 'created_at' => now()
             ]);
@@ -169,11 +272,8 @@ class WhatsappService
         return $mediaId;
     }
 
-    private function buildTemplateChatMessage($campaignId, $contactUuId){
-        $campaign = Campaign::where('id', $campaignId)->first();
+    private function buildCampaignTemplateChatMessage($templateMetadata, $contactUuId){
         $contact = Contact::where('uuid', $contactUuId)->first();
-        $templateMetadata = json_decode($campaign->metadata);
-
         $array = [];
         
         if($templateMetadata->header->format == 'IMAGE' || $templateMetadata->header->format == 'VIDEO' || $templateMetadata->header->format == 'DOCUMENT' || $templateMetadata->header->format == 'LOCATION'){
@@ -228,6 +328,74 @@ class WhatsappService
         return json_encode($array);
     }
 
+    private function buildTemplateChatMessage($templateContent, $contact){
+        //Get the template
+        $template = Template::where('organization_id', $contact->organization_id)
+            ->where('name', $templateContent['name'])
+            ->where('language', $templateContent['language']['code'])
+            ->first();
+
+        $template = json_decode($template->metadata);
+        $templateMetadatas = $template->components;
+        $array = [];
+        $array['type'] = 'text';
+
+        foreach($templateMetadatas as $templateMetadata){
+            if($templateMetadata->type == 'HEADER'){
+                if($templateMetadata->format == 'IMAGE' || $templateMetadata->format == 'VIDEO' || $templateMetadata->format == 'DOCUMENT' || $templateMetadata->format == 'LOCATION'){
+                    $array['type'] = strtolower($templateMetadata->format);
+                }
+            }
+
+            //BODY
+            if($templateMetadata->type == 'BODY'){
+                if(isset($templateMetadata->text)){
+                    $bodyText = $templateMetadata->text;
+
+                    if (isset($templateMetadata->parameters) && !empty($templateMetadata->parameters)) {
+                        $bodyParameters = $templateMetadata->parameters;
+
+                        if($bodyParameters && count($bodyParameters) > 1){
+                            foreach($bodyParameters as $index => $parameter){
+                                $placeholder = '{{' . ($index + 1) . '}}';
+                                $value = $parameter->selection === 'static' ? $parameter->value : $this->getParameters($contact, $parameter->value);
+
+                                $bodyText = str_replace($placeholder, $value, $bodyText);
+                            }
+                        }
+                    }
+
+                    if($array['type'] == 'text'){
+                        $array[$array['type']]['body'] = $bodyText;
+                    } else {
+                        $array[$array['type']]['caption'] = $bodyText;
+                    }
+                }
+            }
+
+            //FOOTER
+            if($templateMetadata->type == 'FOOTER'){
+                $array[$array['type']]['footer'] = $templateMetadata->text;
+            }
+
+            //BUTTONS
+            if($templateMetadata->type == 'BUTTONS'){
+                foreach($templateMetadata->buttons as $key => $button){
+                    $array['buttons'][$key]['type'] = $button->type;
+                    $array['buttons'][$key]['text'] = $button->text;
+                    $array['buttons'][$key]['value'] = $button->text;
+    
+                    if(isset($button->parameters)){
+                        $array['buttons'][$key]['parameters'] = $button->parameters;
+                    }
+                }
+            }
+        }
+
+        //dd(json_encode($array));
+        return json_encode($array);
+    }
+
     private function getParameters($contact, $parameter){
         if($parameter === 'first name'){
             return $contact->first_name;
@@ -242,47 +410,6 @@ class WhatsappService
         }
     }
 
-    /**
-     * This function sends media content via a POST request and uploads the media to Facebook's resumable API.
-     * Note that media types can only be audio, document, image, sticker, or video.
-     *
-     * @param string $phoneNumber The phone number of the recipient.
-     * @param string $mediaType The type of media being uploaded. Valid options are audio, document, image, sticker, or video.
-     * @param string $mediaFile The file to be uploaded as media.
-     * @return mixed Returns the response from the HTTP request.
-     */
-    /*public function sendMedia($contactUuid, $mediaType, $mediaFile)
-    {
-        $contact = Contact::where('uuid', $contactUuId)->first();
-        $mediaFilePath = Storage::path("media/{$mediaFileName}");
-
-        $fileUploadResponse = $this->initiateResumableUploadSession($mediaFilePath);
-
-        if(!$fileUploadResponse->success){
-            return $fileUploadResponse;
-        }
-
-        $url = "https://graph.facebook.com/{$this->apiVersion}/{$this->phoneNumberId}/messages";
-        $headers = $this->setHeaders();
-
-        $requestData['messaging_product'] = 'whatsapp';
-        $requestData['recipient_type'] = 'individual';
-        $requestData['to'] = $contact->phone;
-        $requestData['type'] = $mediaType;
-        $requestData[$mediaType]['id'] = $fileUploadResponse->data->h;
-
-        $responseObject = $this->sendHttpRequest('POST', $url, $requestData, $headers);
-
-        dd($responseObject);
-    }*/
-
-    /**
-     * This function sends a stored image as a media file via a POST request to the specified phone number using Facebook's messaging API.
-     *
-     * @param string $contactUuId The UUID of the contact to whom the image will be sent.
-     * @param string $imageUrl The URL of the stored image.
-     * @return mixed Returns the response from the HTTP request.
-     */
     public function sendMedia($contactUuId, $mediaType, $mediaFileName, $mediaFilePath, $mediaUrl, $location)
     {
         $contact = Contact::where('uuid', $contactUuId)->first();
@@ -388,14 +515,6 @@ class WhatsappService
         return null;
     }
 
-    /**
-     * This function allows you to react to a specific message with an emoji via a POST request to Facebook's messaging API.
-     *
-     * @param string $phoneNumber The phone number of the recipient.
-     * @param string $wamId The ID of the message you want to react to.
-     * @param string $emoji The emoji you want to use as a reaction.
-     * @return mixed Returns the response from the HTTP request.
-     */
     public function reactToMessage($phoneNumber, $wamId, $emoji)
     {
         $url = "https://graph.facebook.com/{$this->apiVersion}/{$this->phoneNumberId}/messages";
@@ -413,13 +532,6 @@ class WhatsappService
         dd($responseObject);
     }
 
-    /**
-     * This function sends a location to a specific phone number via a POST request using Facebook's messaging API.
-     *
-     * @param string $phoneNumber The phone number of the recipient.
-     * @param object $location The location object containing longitude, latitude, name, and address.
-     * @return mixed Returns the response from the HTTP request.
-     */
     public function sendLocation($phoneNumber, $location)
     {
         $url = "https://graph.facebook.com/{$this->apiVersion}/{$this->phoneNumberId}/messages";
@@ -686,12 +798,6 @@ class WhatsappService
         return $responseObject;
     }
 
-    /**
-     * This function deletes a template by its UUID via a DELETE request to Facebook's messaging API.
-     *
-     * @param string $uuid The UUID of the template to be deleted.
-     * @return mixed Returns the response from the HTTP request.
-     */
     public function deleteTemplate($uuid)
     {
         $url = "https://graph.facebook.com/{$this->apiVersion}/{$this->wabaId}/message_templates";
@@ -1035,10 +1141,9 @@ class WhatsappService
                 $responseObject->message = $responseObject->data->error->message;
             }
         } catch (Exception $e) {
+            $response = $e->getResponse();
             $responseObject->success = false;
-            $responseObject->data = new \stdClass();
-            $responseObject->data->error = new \stdClass();
-            $responseObject->data->error->message = $e->getMessage();
+            $responseObject->data = json_decode($response->getBody()->getContents());
         }
 
         return $responseObject;
@@ -1089,7 +1194,6 @@ class WhatsappService
         return $responseObject;
     }
 
-    //Set the headers for request
     public function setHeaders()
     {
         return [
@@ -1098,7 +1202,6 @@ class WhatsappService
         ];
     }
 
-    // Private method to send an HTTP request
     private function sendHttpRequest($method, $url, $data = [], $headers = [])
     {
         $client = new Client();

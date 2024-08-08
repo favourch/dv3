@@ -4,14 +4,9 @@ namespace App\Services;
 
 use App\Models\Contact;
 use App\Models\ContactGroup;
-use App\Exports\ContactsExport;
-use App\Http\Resources\ContactResource;
-use App\Imports\ContactsImport;
-use Illuminate\Http\Request;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Storage;
-use Inertia\Inertia;
 use Propaganistas\LaravelPhone\PhoneNumber;
-use Excel;
 
 class ContactService
 {
@@ -37,8 +32,22 @@ class ContactService
         }
 
         if($request->hasFile('file')){
-            $path = $request->file->store('public');
-            $contact->avatar = '/media/'. $path;
+            $storage = Setting::where('key', 'storage_system')->first()->value;
+            $fileName = $request->file('file')->getClientOriginalName();
+            $fileContent = $request->file('file');
+
+            if($storage === 'local'){
+                $file = Storage::disk('local')->put('public', $fileContent);
+                $mediaFilePath = $file;
+
+                $contact->avatar = '/media/' . ltrim($mediaFilePath, '/');
+            } else if($storage === 'aws') {
+                $file = $request->file('file');
+                $uploadedFile = $file->store('uploads/media/contacts/' . $this->organizationId, 's3');
+                $mediaFilePath = Storage::disk('s3')->url($uploadedFile);
+
+                $contact->avatar = $mediaFilePath;
+            }
         }
 
         if($uuid === null){

@@ -70,8 +70,10 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'check.subscription' => \App\Http\Middleware\CheckSubscriptionStatus::class,
         'check.organization' => \App\Http\Middleware\CheckOrganizationId::class,
+        'check.email.verification' => \App\Http\Middleware\CheckEmailVerification::class,
         'check.client.role' => \App\Http\Middleware\CheckClientRole::class,
         'auth.bearer' => \App\Http\Middleware\AuthenticateBearerToken::class,
         'setOrganization' => \App\Http\Middleware\SetOrganizationFromSession::class,
+        'redirectIfAuthenticated' => \App\Http\Middleware\RedirectIfAuthenticated::class,
     ];
 }

@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
             EmailTemplateSeeder::class,
             LanguageTableSeeder::class,
             AddonsTableSeeder::class,
+            AddonsTableSeeder2::class,
+            PageSeeder::class,
         ]);
     }
 }

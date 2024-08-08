@@ -55,21 +55,17 @@ class HandleInertiaRequests extends Middleware
         }
 
         if($this->isInstalled()){
-            $keys = ['favicon', 'logo', 'company_name', 'address', 'currency' , 'email', 'phone', 'socials', 'trial_period', 'recaptcha_site_key', 'recaptcha_active', 'google_maps_api_key'];
+            $keys = ['favicon', 'logo', 'company_name', 'address', 'currency' , 'email', 'phone', 'socials', 'trial_period', 'recaptcha_site_key', 'recaptcha_active', 'google_analytics_tracking_id', 'google_maps_api_key'];
             $config = Setting::whereIn('key', $keys)->get();
             $languages = Language::where('deleted_at', null)->where('status', 'active')->get();
-            $favicon = Setting::where('key', 'favicon')->first();
-            $favicon = $favicon ? '/media/' . $favicon->value : '/images/favicon.png';
         } else {
             $config = array();
             $languages = array();
-            $favicon = '/images/favicon.png';
         }
 
         return array_merge(parent::share($request), [
             'csrf_token' => csrf_token(),
             'config' => $config,
-            'favicon' => $favicon,
             'auth' => [
                 'user' => $user ?: null,
             ],

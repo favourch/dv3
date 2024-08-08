@@ -37,6 +37,7 @@
     const isOpenModal = ref(false);
     const isOpenInstallModal = ref(false);
     const isLoading = ref(false);
+    const currentURL = ref(window.location.origin);
 
     const emit = defineEmits(['edit', 'delete']);
 
@@ -167,10 +168,10 @@
                 </div>
                 <div class="text-[16px]">{{ $t(addon.name) }}</div>
             </div>
-            <div class="text-slate-500 font-light border-b px-4 text-xs pt-2 pb-4">{{ addon.description }}</div>
+            <div class="text-slate-500 border-b px-4 text-xs pt-2 pb-4">{{ addon.description }}</div>
             <div class="flex justify-between items-center px-4 pb-4 text-xs">
                 <div>
-                    <span class=" py-1 px-3 rounded-md text-slate-600" :class="addon.status == 0 ? 'bg-[#ff7a7a] text-white' : 'bg-slate-50'">{{ addon.status == 1 ? $t('Installed') : $t('Not installed') }}</span>
+                    <span class=" py-1 px-3 rounded-md text-slate-600" :class="addon.status == 0 ? 'bg-red-600 text-white' : 'bg-slate-50'">{{ addon.status == 1 ? $t('Installed') : $t('Not installed') }}</span>
                 </div>
                 <div>
                     <button v-if="addon.status == 0" @click="setupInstallModal(addon)" class="rounded-full border-2 w-full px-10 py-2 hover:border-secondary hover:bg-secondary hover:text-white text-secondary">{{ $t('Install') }}</button>
@@ -202,6 +203,16 @@
                             <div class="text-sm mb-2">{{ $t(input.label) }}</div>
                             <FormToggleSwitch v-if="input.element == 'toggle'" v-model="form2.settings[input.name]"/>
                         </div>
+                    </div>
+                    <div v-if="modalTitle == 'Embedded Signup'" class="bg-orange-100 p-2 rounded-md shadow-sm mb-1 col-span-2">
+                        <div class="flex items-center gap-x-1 border-b border-slate-500 pb-2 mb-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11v5m0 5a9 9 0 1 1 0-18a9 9 0 0 1 0 18Zm.05-13v.1h-.1V8h.1Z"/></svg>
+                            <p class="text-sm">{{ $t('Webhook setup') }}</p>
+                        </div>
+                        <span>
+                            <p class="text-sm leading-6 break-all">{{ $t('Callback URL') }}: {{ currentURL + '/webhook/waba' }}</p>
+                            <p class="text-sm leading-6 break-all">{{ $t('Verify token') }}: {{ getValueByKey('whatsapp_callback_token') }}</p>
+                        </span>
                     </div>
                 </div>
                 <div class="mt-5 border-t pt-5 flex">

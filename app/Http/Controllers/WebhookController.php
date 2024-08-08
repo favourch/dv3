@@ -46,6 +46,20 @@ class WebhookController extends BaseController
         ]);
     }
 
+    public function whatsappWebhook(Request $request){
+        $verifyToken = Setting::where('key', 'whatsapp_callback_token')->first()->value;
+
+        $mode = $request->input('hub_mode');
+        $token = $request->input('hub_verify_token');
+        $challenge = $request->input('hub_challenge');
+
+        if ($mode === 'subscribe' && $token === $verifyToken) {
+            return Response::make($challenge, 200);
+        } else {
+            return Response::json(['error' => 'Forbidden'], 404);
+        }
+    }
+
     public function handle(Request $request, $identifier = null)
     {
         //Log::info('Webhook Handler: Start processing for identifier ' . $identifier);
@@ -188,6 +202,13 @@ class WebhookController extends BaseController
                         }
 
                         if($contact){
+                            if($contact->first_name == NULL){
+                                $contactData = $res['value']['contacts'][0]['profile'];
+                                $contact->update([
+                                    'first_name' => $contactData['name'],
+                                ]);
+                            }
+
                             $chat = Chat::where('wam_id', $response['id'])->where('organization_id', $organization->id)->first();
 
                             if(!$chat){
@@ -246,7 +267,7 @@ class WebhookController extends BaseController
 
                                 event(new NewChatEvent($chatArray, $organization->id));
 
-                                if($response['type'] === 'text'){
+                                if($response['type'] === 'text' || $response['type'] === 'button'){
                                     (new AutoReplyService)->checkAutoReply($chat);
                                 }
                             }

@@ -7,8 +7,10 @@ use App\Http\Controllers\Controller as BaseController;
 use App\Http\Requests\StoreLanguage;
 use App\Http\Resources\LangResource;
 use App\Models\Language;
+use App\Models\Setting;
 use App\Services\LangService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\File;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
@@ -24,6 +26,7 @@ class LanguageController extends BaseController
         return Inertia::render('Admin/Setting/Language/Index', [
             'title' => __('Languages'),
             'rows' => $this->langService->get($request), 
+            'default_language' => Setting::where('key', 'default_language')->value('value') ?? 'en',
             'filters' => $request->all()
         ]);
     }
@@ -210,6 +213,27 @@ class LanguageController extends BaseController
             'status', [
                 'type' => 'success', 
                 'message' => __('Translation updated successfully')
+            ]
+        );
+    }
+
+    public function setDefault(Request $request, $languageCode)
+    {
+        // Update or insert the default_language setting in the settings table
+        DB::table('settings')
+            ->updateOrInsert([
+                'key' => 'default_language'
+            ], [
+                'value' => $languageCode,
+            ]);
+
+        // Set the application's default locale
+        App::setLocale($languageCode);
+
+        return redirect('/admin/languages')->with(
+            'status', [
+                'type' => 'success', 
+                'message' => __('Language updated successfully!')
             ]
         );
     }
